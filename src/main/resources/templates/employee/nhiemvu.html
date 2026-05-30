@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Cổng Nhân Viên - Nhiệm vụ & Thông báo</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <script>
+        function markDone(taskId) {
+            if (confirm("Xác nhận đã hoàn thành công việc này?\nMột thông báo báo cáo sẽ được tự động gửi đến Giám đốc.")) {
+                document.getElementById('markDoneId').value = taskId;
+                document.getElementById('markDoneForm').submit();
+            }
+        }
+    </script>
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Sidebar -->
+        <div th:replace="~{fragments/employee_sidebar :: sidebar('nhiemvu')}"></div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <h2 class="page-title" style="margin-top: 0;">Nhiệm vụ được giao & Thông báo</h2>
+            
+            <div style="display: flex; gap: 20px;">
+                
+                <!-- Nhiệm vụ của tôi -->
+                <div style="flex: 1.5; display: flex; flex-direction: column; gap: 15px;">
+                    <h3 style="color: var(--text-primary); margin: 0; border-bottom: 2px solid var(--color-orange); padding-bottom: 10px;">📋 Nhiệm vụ dành cho bạn</h3>
+                    
+                    <div th:if="${#lists.isEmpty(tasks)}" class="content-card" style="text-align: center; color: var(--text-secondary); padding: 30px;">
+                        Bạn hiện không có nhiệm vụ nào cần xử lý.
+                    </div>
+                    
+                    <div th:each="task : ${tasks}" class="content-card" style="border-left: 4px solid var(--color-orange); padding: 15px;">
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px;">
+                            <div style="color: var(--text-secondary); font-size: 12px; font-style: italic;" th:text="${#temporals.format(task.createdAt, 'dd/MM/yyyy HH:mm')}"></div>
+                            
+                            <div th:if="${task.message.endsWith('[HOÀN THÀNH]')}" style="color: #10B981; font-weight: bold; font-size: 14px;">
+                                ✓ Đã Hoàn thành
+                            </div>
+                            <button th:unless="${task.message.endsWith('[HOÀN THÀNH]')}" class="btn-success" style="padding: 5px 10px; font-size: 12px;" th:onclick="'markDone(' + ${task.id} + ')'">Báo cáo Hoàn thành</button>
+                        </div>
+                        
+                        <div style="white-space: pre-wrap; font-size: 15px; line-height: 1.5;" th:text="${task.message.replace(' [HOÀN THÀNH]', '')}"></div>
+                    </div>
+                </div>
+                
+                <!-- Thông báo chung -->
+                <div style="flex: 1; display: flex; flex-direction: column; gap: 15px;">
+                    <h3 style="color: var(--text-primary); margin: 0; border-bottom: 2px solid #3b82f6; padding-bottom: 10px;">📢 Thông báo từ Công ty</h3>
+                    
+                    <div th:if="${#lists.isEmpty(notifs)}" class="content-card" style="text-align: center; color: var(--text-secondary); padding: 30px;">
+                        Chưa có thông báo nào từ Giám đốc.
+                    </div>
+                    
+                    <div th:each="notif : ${notifs}" class="content-card" style="border-left: 4px solid #3b82f6; padding: 15px;">
+                        <div style="color: var(--text-secondary); font-size: 12px; font-style: italic; margin-bottom: 8px; text-align: right;" th:text="${#temporals.format(notif.createdAt, 'dd/MM/yyyy HH:mm')}"></div>
+                        <div style="white-space: pre-wrap; font-size: 14px; line-height: 1.4;" th:text="${notif.message}"></div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+    
+    <form id="markDoneForm" th:action="@{/employee/nhiemvu/mark-done}" method="post" style="display:none;">
+        <input type="hidden" name="id" id="markDoneId">
+    </form>
+</body>
+</html>

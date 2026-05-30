@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Lịch làm việc - <span th:text="${employee.name}"></span></title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <style>
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 10px;
+            margin-top: 20px;
+        }
+        .calendar-header {
+            text-align: center;
+            font-weight: bold;
+            color: var(--text-secondary);
+            padding: 10px 0;
+        }
+        .calendar-day {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            min-height: 80px;
+            padding: 10px;
+            text-align: center;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .calendar-day:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        .calendar-day.empty {
+            background-color: transparent;
+            border: none;
+            cursor: default;
+        }
+        .calendar-day.empty:hover {
+            transform: none;
+            box-shadow: none;
+        }
+        .day-number {
+            font-weight: bold;
+            font-size: 16px;
+            margin-bottom: 5px;
+        }
+        .shift-label {
+            font-size: 12px;
+            padding: 4px 8px;
+            border-radius: 4px;
+            display: inline-block;
+            color: white;
+            word-break: break-word;
+        }
+        .shift-ca { background-color: #3b82f6; } /* Xanh lam */
+        .shift-nghi { background-color: #ef4444; } /* Đỏ */
+        .shift-choduyet { background-color: #f59e0b; } /* Cam */
+        .shift-tuchoi { background-color: #6b7280; } /* Xám */
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Sidebar Fragment -->
+        <div th:replace="~{fragments/sidebar :: sidebar('nhanvien')}"></div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h2 class="page-title">
+                    <a th:href="@{/admin/nhanvien}" style="text-decoration: none; color: var(--text-secondary);">← Trở về</a> 
+                    Lịch làm việc - <span th:text="${employee.name}"></span>
+                </h2>
+                
+                <form th:action="@{/admin/nhanvien/{id}/lich(id=${employee.id})}" method="get" style="display: flex; gap: 10px;">
+                    <input type="number" name="month" class="rounded-textfield" th:value="${selectedMonth}" min="1" max="12" style="width: 80px;">
+                    <input type="number" name="year" class="rounded-textfield" th:value="${selectedYear}" min="2000" max="2100" style="width: 100px;">
+                    <button type="submit" class="btn-primary">Xem</button>
+                </form>
+            </div>
+
+            <div class="content-card">
+                <div class="calendar-grid">
+                    <!-- Headers -->
+                    <div class="calendar-header">T2</div>
+                    <div class="calendar-header">T3</div>
+                    <div class="calendar-header">T4</div>
+                    <div class="calendar-header">T5</div>
+                    <div class="calendar-header">T6</div>
+                    <div class="calendar-header" style="color: var(--color-danger);">T7</div>
+                    <div class="calendar-header" style="color: var(--color-danger);">CN</div>
+
+                    <!-- Empty slots for days before 1st of month -->
+                    <div th:each="i : ${#numbers.sequence(1, startDayOfWeek - 1)}" th:if="${startDayOfWeek > 1}" class="calendar-day empty"></div>
+
+                    <!-- Days -->
+                    <div th:each="i : ${#numbers.sequence(1, daysInMonth)}" class="calendar-day" onclick="showOptions(this)">
+                        <div class="day-number" th:text="${i}"></div>
+                        
+                        <th:block th:with="shift=${schedules[i-1]}">
+                            <div th:if="${shift != null && shift != ''}">
+                                <!-- Format labels based on shift content -->
+                                <span th:if="${#strings.startsWith(shift, 'Ca')}" class="shift-label shift-ca" th:text="${shift}"></span>
+                                <span th:if="${#strings.startsWith(shift, 'Đã duyệt nghỉ')}" class="shift-label shift-nghi">Nghỉ phép</span>
+                                <span th:if="${#strings.startsWith(shift, 'Chờ duyệt nghỉ')}" class="shift-label shift-choduyet">Chờ duyệt</span>
+                                <span th:if="${#strings.startsWith(shift, 'Từ chối')}" class="shift-label shift-tuchoi">Từ chối</span>
+                            </div>
+                        </th:block>
+                    </div>
+                </div>
+            </div>
+            
+            <div style="text-align: right; margin-top: 20px;">
+                <button class="btn-warning" onclick="requestOT()">Yêu cầu Tăng ca</button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        function showOptions(element) {
+            var day = element.querySelector('.day-number').innerText;
+            var action = prompt("Ngày " + day + "\nBạn muốn thao tác gì?\n1. Chi tiết\n2. Yêu cầu tăng ca");
+            if (action == '2') {
+                requestOT(day);
+            }
+        }
+        
+        function requestOT(day) {
+            var note = prompt("Nhập nội dung yêu cầu tăng ca " + (day ? "cho ngày " + day : "chung") + ":\n(VD: Yêu cầu tăng ca tối T7 tuần này)");
+            if (note && note.trim() !== "") {
+                var form = document.createElement("form");
+                form.method = "POST";
+                form.action = "/admin/send-notification";
+                
+                var input = document.createElement("input");
+                input.type = "hidden";
+                input.name = "message";
+                input.value = "[Tăng ca - Sếp yêu cầu] " + note;
+                
+                form.appendChild(input);
+                document.body.appendChild(form);
+                form.submit();
+                alert("Đã gửi thông báo yêu cầu tăng ca!");
+            }
+        }
+    </script>
+</body>
+</html>

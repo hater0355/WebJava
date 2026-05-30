@@ -1,0 +1,225 @@
+:root {
+    /* Light Mode */
+    --bg-main: #f3f4f6;
+    --bg-card: #f9fafb;
+    --bg-sidebar: #f3f4f6;
+    --text-primary: #111827;
+    --text-secondary: #6b7280;
+    --border-color: #e5e7eb;
+    
+    --color-login: #2563eb;
+    --color-register: #10b981;
+    --color-orange: #f59e0b;
+    --color-danger: #dc2626;
+}
+
+[data-theme="dark"] {
+    --bg-main: #111827;
+    --bg-card: #1f2937;
+    --bg-sidebar: #1a222c;
+    --text-primary: #f3f4f6;
+    --text-secondary: #9ca3af;
+    --border-color: #374151;
+}
+
+body {
+    font-family: 'Tahoma', sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: var(--bg-main);
+    color: var(--text-primary);
+    transition: background-color 0.3s, color 0.3s;
+}
+
+/* Auth Pages Background (Gradient) */
+.auth-body {
+    background: linear-gradient(180deg, #f5f7fa 0%, #e4e9f2 100%);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.auth-card {
+    background: #ffffff; /* keep login card white regardless of theme for now */
+    width: 450px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+    padding: 40px;
+}
+
+/* Form Elements */
+.rounded-textfield {
+    width: 100%;
+    height: 40px;
+    border-radius: 20px;
+    border: 1px solid #d1d5db;
+    padding: 0 15px;
+    font-size: 14px;
+    outline: none;
+    transition: border-color 0.2s;
+    background-color: #ffffff;
+    color: #1f2937;
+}
+
+.rounded-textfield:focus { border-color: var(--color-login); }
+
+.rounded-button {
+    width: 100%;
+    height: 45px;
+    border-radius: 22px;
+    border: none;
+    font-family: 'Tahoma', sans-serif;
+    font-weight: bold;
+    font-size: 15px;
+    color: white;
+    cursor: pointer;
+    transition: opacity 0.2s;
+}
+.rounded-button:hover { opacity: 0.9; }
+
+.btn-login { background-color: var(--color-login); }
+.btn-register { background-color: var(--color-register); }
+.btn-primary { background-color: var(--color-login); color: white; border-radius: 20px; padding: 8px 20px; border:none; cursor: pointer; font-weight: bold;}
+.btn-success { background-color: var(--color-register); color: white; border-radius: 20px; padding: 8px 20px; border:none; cursor: pointer; font-weight: bold;}
+.btn-warning { background-color: var(--color-orange); color: white; border-radius: 20px; padding: 8px 20px; border:none; cursor: pointer; font-weight: bold;}
+.btn-danger { background-color: var(--color-danger); color: white; border-radius: 20px; padding: 8px 20px; border:none; cursor: pointer; font-weight: bold;}
+
+
+/* Dashboard Layout */
+.dashboard-container {
+    display: flex;
+    min-height: 100vh;
+}
+
+/* Sidebar */
+.sidebar {
+    width: 280px;
+    background-color: var(--bg-sidebar);
+    border-right: 1px solid var(--border-color);
+    display: flex;
+    flex-direction: column;
+    transition: background-color 0.3s, border-color 0.3s;
+}
+
+.sidebar-logo {
+    color: var(--color-orange);
+    font-size: 18px;
+    font-weight: bold;
+    padding: 40px 20px 40px 10px;
+}
+
+.sidebar-menu {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    flex-grow: 1;
+}
+
+.sidebar-menu li a {
+    display: block;
+    padding: 12px 20px;
+    color: var(--text-primary);
+    text-decoration: none;
+    font-size: 15px;
+    border-radius: 25px;
+    margin: 5px 15px;
+    transition: background-color 0.2s;
+}
+
+.sidebar-menu li a:hover, .sidebar-menu li a.active {
+    background-color: var(--bg-card);
+    font-weight: bold;
+}
+
+/* User Profile in Sidebar */
+.sidebar-profile {
+    padding: 15px 20px;
+    background-color: var(--bg-sidebar);
+    cursor: pointer;
+    border-top: 1px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.sidebar-profile:hover {
+    background-color: var(--bg-card);
+}
+
+.profile-info {
+    flex-grow: 1;
+}
+
+.profile-name {
+    font-weight: bold;
+    font-size: 14px;
+    color: var(--text-primary);
+    margin: 0 0 3px 0;
+}
+
+.profile-code {
+    font-weight: bold;
+    font-size: 13px;
+    color: var(--color-register);
+    margin: 0;
+}
+
+/* Main Content */
+.main-content {
+    flex-grow: 1;
+    padding: 30px;
+    background-color: var(--bg-main);
+    transition: background-color 0.3s;
+}
+
+.page-title {
+    font-size: 26px;
+    font-weight: bold;
+    color: var(--text-primary);
+    margin-bottom: 20px;
+}
+
+/* Cards */
+.stat-card {
+    background-color: var(--bg-card);
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+    color: white; /* For stats with background colors */
+    margin-bottom: 20px;
+}
+
+.content-card {
+    background-color: var(--bg-card);
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+    margin-bottom: 20px;
+    border: 1px solid var(--border-color);
+}
+
+/* Tables */
+.custom-table {
+    width: 100%;
+    border-collapse: collapse;
+    color: var(--text-primary);
+}
+
+.custom-table th, .custom-table td {
+    padding: 12px 15px;
+    text-align: left;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.custom-table th {
+    font-weight: bold;
+    background-color: transparent;
+    color: var(--text-secondary);
+}
+
+.custom-table tbody tr:hover {
+    background-color: rgba(0,0,0,0.02);
+}
+[data-theme="dark"] .custom-table tbody tr:hover {
+    background-color: rgba(255,255,255,0.02);
+}

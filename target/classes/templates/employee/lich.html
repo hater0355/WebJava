@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Cổng Nhân Viên - Lịch làm việc</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <script th:inline="javascript">
+        var currentMonth = /*[[${selectedMonth}]]*/ 1;
+        var currentYear = /*[[${selectedYear}]]*/ 2024;
+
+        function changeMonth(delta) {
+            currentMonth += delta;
+            if (currentMonth > 12) {
+                currentMonth = 1;
+                currentYear++;
+            } else if (currentMonth < 1) {
+                currentMonth = 12;
+                currentYear--;
+            }
+            window.location.href = '/employee/lich?month=' + currentMonth + '&year=' + currentYear;
+        }
+        
+        function goToToday() {
+            var d = new Date();
+            window.location.href = '/employee/lich?month=' + (d.getMonth() + 1) + '&year=' + d.getFullYear();
+        }
+
+        function handleDateClick(day, dateStr, currentShift) {
+            var today = new Date();
+            today.setHours(0,0,0,0);
+            var clickedDate = new Date(dateStr);
+            
+            if (clickedDate < today) {
+                alert("Lỗi: Bạn không thể đăng ký hoặc thay đổi lịch làm việc cho những ngày đã qua!");
+                return;
+            }
+
+            if (currentShift.startsWith("Chờ duyệt") || currentShift.startsWith("Xin nghỉ")) {
+                alert("Đơn xin nghỉ của bạn đang chờ Sếp duyệt!");
+                return;
+            }
+
+            if (currentShift.startsWith("Ca 1") || currentShift.startsWith("Ca 2")) {
+                if (confirm("Ngày " + dateStr + " đang có ca làm.\nBạn có muốn XIN NGHỈ PHÉP không?")) {
+                    var reason = prompt("Nhập lý do xin nghỉ phép (Bắt buộc):");
+                    if (reason && reason.trim() !== "") {
+                        document.getElementById('xinNghiFormDate').value = dateStr;
+                        document.getElementById('xinNghiFormReason').value = reason;
+                        document.getElementById('xinNghiForm').submit();
+                    }
+                }
+                return;
+            }
+
+            // Mở modal đăng ký ca
+            document.getElementById('regDateDisplay').innerText = dateStr;
+            document.getElementById('regDateInput').value = dateStr;
+            document.getElementById('regModal').style.display = 'flex';
+        }
+
+        function closeRegModal() {
+            document.getElementById('regModal').style.display = 'none';
+        }
+    </script>
+    <style>
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 10px;
+            margin-top: 20px;
+        }
+        .calendar-header {
+            text-align: center; font-weight: bold; padding: 10px; color: var(--text-secondary);
+        }
+        .calendar-cell {
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 10px;
+            min-height: 80px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            background-color: var(--bg-card);
+            transition: transform 0.2s;
+        }
+        .calendar-cell:hover { transform: scale(1.02); }
+        .calendar-cell.empty { background-color: transparent; border: none; cursor: default; }
+        .calendar-cell.empty:hover { transform: none; }
+        .day-num { font-size: 16px; font-weight: bold; }
+        .shift-label { font-size: 12px; margin-top: 5px; text-align: center; }
+
+        /* Status Colors */
+        .shift-ca { background-color: #3b82f6; color: white; border: none; }
+        .shift-cho-duyet { background-color: #f59e0b; color: white; border: none; }
+        .shift-da-duyet { background-color: #ef4444; color: white; border: none; }
+        .shift-tu-choi { background-color: gray; color: white; border: none; }
+        .weekend { background-color: #fee2e2; color: #dc2626; border-color: #fca5a5; }
+
+        .modal {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5); justify-content: center; align-items: center; z-index: 1000;
+        }
+        .modal-content {
+            background: var(--bg-card); padding: 20px; border-radius: 8px; width: 400px;
+            color: var(--text-primary);
+        }
+        .modal-content select {
+            width: 100%; padding: 10px; margin-top: 15px; margin-bottom: 20px;
+            border: 1px solid var(--border-color); border-radius: 4px; font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Sidebar Fragment -->
+        <div th:replace="~{fragments/employee_sidebar :: sidebar('lich')}"></div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <h2 class="page-title" style="margin-top: 0;">Lịch làm việc & Xin nghỉ</h2>
+            
+            <div class="content-card" style="margin-bottom: 20px;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div style="display: flex; align-items: center; gap: 15px;">
+                        <button class="btn-primary" style="background-color: var(--bg-sidebar); color: var(--text-primary); border: 1px solid var(--border-color);" onclick="changeMonth(-1)">&lt; Tháng trước</button>
+                        <h3 style="margin: 0; color: var(--color-orange); min-width: 150px; text-align: center;" th:text="'Tháng ' + ${selectedMonth} + ' - ' + ${selectedYear}"></h3>
+                        <button class="btn-primary" style="background-color: var(--bg-sidebar); color: var(--text-primary); border: 1px solid var(--border-color);" onclick="changeMonth(1)">Tháng sau &gt;</button>
+                        <button class="btn-primary" style="background-color: var(--color-orange);" onclick="goToToday()">Tháng này</button>
+                    </div>
+                    
+                    <div style="display: flex; gap: 15px; font-size: 14px; color: var(--text-secondary);">
+                        <span><span style="display:inline-block; width:12px; height:12px; background:#3b82f6; border-radius:3px; margin-right:5px;"></span> Đã nhận ca</span>
+                        <span><span style="display:inline-block; width:12px; height:12px; background:#f59e0b; border-radius:3px; margin-right:5px;"></span> Chờ duyệt nghỉ</span>
+                        <span><span style="display:inline-block; width:12px; height:12px; background:#ef4444; border-radius:3px; margin-right:5px;"></span> Nghỉ phép</span>
+                    </div>
+                </div>
+
+                <div class="calendar-grid">
+                    <div class="calendar-header">T2</div>
+                    <div class="calendar-header">T3</div>
+                    <div class="calendar-header">T4</div>
+                    <div class="calendar-header">T5</div>
+                    <div class="calendar-header">T6</div>
+                    <div class="calendar-header" style="color: #dc2626;">T7</div>
+                    <div class="calendar-header" style="color: #dc2626;">CN</div>
+
+                    <!-- Trống ngày đầu tháng -->
+                    <th:block th:each="i : ${#numbers.sequence(1, startDayOfWeek - 1)}" th:if="${startDayOfWeek > 1}">
+                        <div class="calendar-cell empty"></div>
+                    </th:block>
+
+                    <!-- Render ngày -->
+                    <th:block th:each="day, iterStat : ${#numbers.sequence(1, daysInMonth)}">
+                        <div th:with="
+                                dateStr=${selectedYear + '-' + (selectedMonth < 10 ? '0' + selectedMonth : selectedMonth) + '-' + (day < 10 ? '0' + day : day)},
+                                currentShift=${schedules[day - 1]},
+                                dayOfWeek=${(startDayOfWeek - 1 + day - 1) % 7 + 1},
+                                isWeekend=${dayOfWeek == 6 || dayOfWeek == 7},
+                                isCa=${currentShift != null and (currentShift.startsWith('Ca 1') or currentShift.startsWith('Ca 2'))},
+                                isPending=${currentShift != null and (currentShift.startsWith('Chờ duyệt') or currentShift.startsWith('Xin nghỉ'))},
+                                isApproved=${currentShift != null and currentShift.startsWith('Đã duyệt')},
+                                isRejected=${currentShift != null and currentShift.startsWith('Từ chối')}
+                             "
+                             class="calendar-cell"
+                             th:classappend="${isCa ? 'shift-ca' : (isPending ? 'shift-cho-duyet' : (isApproved ? 'shift-da-duyet' : (isRejected ? 'shift-tu-choi' : (isWeekend ? 'weekend' : ''))))}"
+                             th:attr="onclick=|handleDateClick('${day}', '${dateStr}', '${currentShift}')|">
+                            
+                            <span class="day-num" th:text="${day}"></span>
+                            
+                            <span class="shift-label" th:if="${isCa}" th:text="${currentShift}"></span>
+                            <span class="shift-label" th:if="${isPending}">Chờ duyệt</span>
+                            <span class="shift-label" th:if="${isApproved}">Nghỉ phép</span>
+                            <span class="shift-label" th:if="${isRejected}">Từ chối</span>
+                        </div>
+                    </th:block>
+                </div>
+            </div>
+
+        </div>
+    </div>
+    
+    <!-- Hidden Forms -->
+    <form id="xinNghiForm" th:action="@{/employee/lich/xinnghi}" method="post" style="display:none;">
+        <input type="hidden" name="date" id="xinNghiFormDate">
+        <input type="hidden" name="reason" id="xinNghiFormReason">
+        <input type="hidden" name="month" th:value="${selectedMonth}">
+        <input type="hidden" name="year" th:value="${selectedYear}">
+    </form>
+
+    <!-- Modal Đăng Ký Ca -->
+    <div id="regModal" class="modal">
+        <div class="modal-content">
+            <h3 style="margin-top:0; border-bottom: 2px solid var(--color-orange); padding-bottom: 10px;">Cập nhật Lịch</h3>
+            <p>Đăng ký lịch cho ngày: <strong id="regDateDisplay" style="color: var(--color-orange);"></strong></p>
+            
+            <form th:action="@{/employee/lich/dangky}" method="post">
+                <input type="hidden" name="date" id="regDateInput">
+                <input type="hidden" name="month" th:value="${selectedMonth}">
+                <input type="hidden" name="year" th:value="${selectedYear}">
+                
+                <select name="shift">
+                    <option value="Ca 1 (08:00-17:00)">Ca 1 (08:00-17:00, nghỉ 12h-13h)</option>
+                    <option value="Ca 2 (12:00-21:00)">Ca 2 (12:00-21:00, nghỉ 16h-17h)</option>
+                    <option value="Nghỉ">Nghỉ / Không đăng ký</option>
+                </select>
+                
+                <div style="display: flex; justify-content: flex-end; gap: 10px;">
+                    <button type="button" class="btn-danger" onclick="closeRegModal()">Hủy</button>
+                    <button type="submit" class="btn-success">Lưu thay đổi</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</body>
+</html>

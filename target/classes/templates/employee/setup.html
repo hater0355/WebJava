@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Cập nhật hồ sơ lần đầu</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <style>
+        select.rounded-textfield {
+            appearance: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body class="auth-body">
+    <div class="auth-card" style="width: 500px;">
+        <h1 class="auth-title register" style="color: var(--color-danger); font-size: 24px;">CẬP NHẬT HỒ SƠ LẦN ĐẦU</h1>
+        <p style="text-align: center; font-size: 13px; color: var(--text-secondary); margin-bottom: 30px;">
+            Đây là quy trình bắt buộc để lưu thông tin khẩn cấp và thiết lập số giảm trừ người phụ thuộc tính thuế TNCN.
+        </p>
+        
+        <form th:action="@{/employee/setup}" method="post">
+            <div style="margin-bottom: 15px;">
+                <label class="form-label">Ngày sinh:</label>
+                <input type="date" name="dob" class="rounded-textfield" required>
+            </div>
+            
+            <div style="margin-bottom: 15px;">
+                <label class="form-label">Người liên hệ khẩn cấp là:</label>
+                <select name="relationship" class="rounded-textfield">
+                    <option>Bố</option>
+                    <option>Mẹ</option>
+                    <option>Anh/Chị/Em</option>
+                    <option>Vợ/Chồng</option>
+                    <option>Khác</option>
+                </select>
+            </div>
+            
+            <div style="margin-bottom: 15px;">
+                <label class="form-label">Số điện thoại khẩn cấp:</label>
+                <input type="text" name="emergencyPhone" class="rounded-textfield" required placeholder="Nhập SĐT liên hệ khẩn cấp...">
+            </div>
+            
+            <div style="margin-bottom: 30px;">
+                <label class="form-label">Số người phụ thuộc giảm trừ gia cảnh (để tính thuế TNCN):</label>
+                <input type="number" name="dependents" class="rounded-textfield" value="0" min="0" required>
+            </div>
+
+            <button type="submit" class="rounded-button btn-register" style="background-color: var(--color-danger);">Lưu và Truy cập Hệ Thống</button>
+        </form>
+    </div>
+</body>
+</html>

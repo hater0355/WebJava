@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Hệ Thống Quản Lý - Giao Việc</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <script>
+        var selectedTaskId = null;
+        var selectedTaskStatus = null;
+
+        function selectRow(row, taskId, status) {
+            var rows = document.querySelectorAll('#taskTable tbody tr');
+            rows.forEach(r => {
+                r.style.backgroundColor = '';
+                r.classList.remove('selected-row');
+            });
+            row.style.backgroundColor = 'rgba(37, 99, 235, 0.1)';
+            row.classList.add('selected-row');
+            selectedTaskId = taskId;
+            selectedTaskStatus = status;
+        }
+
+        function markDone() {
+            if (!selectedTaskId) {
+                alert("Vui lòng chọn 1 công việc trong bảng để đánh dấu!");
+                return;
+            }
+            if (selectedTaskStatus.includes("Hoàn thành")) {
+                alert("Công việc này đã được đánh dấu hoàn thành rồi!");
+                return;
+            }
+            document.getElementById('markDoneFormId').value = selectedTaskId;
+            document.getElementById('markDoneForm').submit();
+        }
+
+        function deleteTask() {
+            if (!selectedTaskId) {
+                alert("Vui lòng chọn 1 công việc trong bảng để xóa!");
+                return;
+            }
+            if (confirm("Bạn có chắc chắn muốn xóa công việc này khỏi lịch sử không?")) {
+                document.getElementById('deleteFormId').value = selectedTaskId;
+                document.getElementById('deleteForm').submit();
+            }
+        }
+        
+        function validateForm() {
+            var title = document.getElementById("taskTitle").value.trim();
+            var desc = document.getElementById("taskDesc").value.trim();
+            var deadline = document.getElementById("taskDeadline").value;
+            var target = document.getElementById("taskTarget").value;
+
+            if (target === "-- Chọn người hoặc phòng ban --") {
+                alert("Vui lòng chọn nhân viên hoặc phòng ban nhận việc!");
+                return false;
+            }
+            
+            if (title === "" || desc === "" || deadline === "") {
+                alert("Vui lòng nhập đầy đủ tiêu đề, nội dung công việc và hạn chót!");
+                return false;
+            }
+            
+            var dDate = new Date(deadline);
+            var today = new Date();
+            today.setHours(0,0,0,0);
+            if (dDate < today) {
+                alert("Hạn chót không được nằm trong quá khứ!\nVui lòng chọn một ngày từ hôm nay trở đi.");
+                return false;
+            }
+
+            // Convert yyyy-mm-dd to dd/MM/yyyy for backend format consistency
+            var parts = deadline.split("-");
+            document.getElementById("hiddenDeadline").value = parts[2] + "/" + parts[1] + "/" + parts[0];
+            
+            return true;
+        }
+
+        function filterTasks() {
+            var filter = document.getElementById("filterSelect").value;
+            var rows = document.querySelectorAll('#taskTable tbody tr');
+            rows.forEach(r => {
+                var status = r.getAttribute('data-status');
+                if (filter === "Tất cả") {
+                    r.style.display = "";
+                } else if (filter === "Hoàn thành") {
+                    r.style.display = status.includes("Hoàn thành") ? "" : "none";
+                } else if (filter === "Chưa hoàn thành") {
+                    r.style.display = !status.includes("Hoàn thành") ? "" : "none";
+                }
+            });
+        }
+    </script>
+    <style>
+        .selected-row { border-left: 3px solid var(--color-login); }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; font-weight: bold; margin-bottom: 5px; color: var(--text-primary); }
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%; padding: 10px; border: 1px solid var(--border-color); border-radius: 4px;
+            font-family: inherit; font-size: 14px;
+        }
+        .stats-badge {
+            font-size: 16px; font-weight: bold; padding: 5px 15px; border-radius: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Sidebar -->
+        <div th:replace="~{fragments/sidebar :: sidebar('giaoviec')}"></div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h2 class="page-title" style="margin: 0;">Giao Việc Cho Nhân Viên</h2>
+                <div>
+                    <span class="stats-badge" style="color: var(--color-primary);">Tổng đã giao: <span th:text="${totalTasks}"></span></span>
+                    <span class="stats-badge" style="color: var(--color-success); margin-left: 15px;">Hoàn thành: <span th:text="${completedTasks}"></span></span>
+                </div>
+            </div>
+            
+            <div style="display: flex; gap: 20px;">
+                <!-- Form Giao Việc -->
+                <div class="content-card" style="flex: 1;">
+                    <form th:action="@{/admin/giaoviec/add}" method="post" onsubmit="return validateForm()">
+                        <div class="form-group">
+                            <label>Chọn Nhân viên nhận việc:</label>
+                            <select name="target" id="taskTarget">
+                                <option value="-- Chọn người hoặc phòng ban --">-- Chọn người hoặc phòng ban --</option>
+                                <option th:each="dep : ${departments}" th:value="'[Phòng ban] ' + ${dep.name}" th:text="'[Phòng ban] ' + ${dep.name}"></option>
+                                <option th:each="emp : ${employees}" th:value="${emp.id} + ' - ' + ${emp.name}" th:text="${emp.id} + ' - ' + ${emp.name}"></option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Tiêu đề công việc:</label>
+                            <input type="text" name="title" id="taskTitle" placeholder="Nhập tiêu đề...">
+                        </div>
+                        <div class="form-group">
+                            <label>Hạn chót (Deadline):</label>
+                            <input type="date" id="taskDeadline">
+                            <input type="hidden" name="deadline" id="hiddenDeadline">
+                        </div>
+                        <div class="form-group">
+                            <label>Nội dung chi tiết:</label>
+                            <textarea name="description" id="taskDesc" rows="5" maxlength="255" placeholder="Nhập chi tiết công việc (tối đa 255 ký tự)..."></textarea>
+                        </div>
+                        <button type="submit" class="btn-primary" style="background-color: var(--color-orange); width: 100%; font-size: 16px; padding: 12px;">Giao việc ngay</button>
+                    </form>
+                </div>
+                
+                <!-- Lịch sử Giao Việc -->
+                <div class="content-card" style="flex: 1.5; display: flex; flex-direction: column;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                        <h3 style="margin: 0; color: var(--text-secondary);">Lịch sử công việc đã giao:</h3>
+                        <select id="filterSelect" onchange="filterTasks()" style="padding: 5px; border-radius: 4px; border: 1px solid var(--border-color);">
+                            <option value="Tất cả">Tất cả</option>
+                            <option value="Chưa hoàn thành">Chưa hoàn thành</option>
+                            <option value="Hoàn thành">Hoàn thành</option>
+                        </select>
+                    </div>
+                    
+                    <div style="flex: 1; overflow-y: auto;">
+                        <table class="custom-table" id="taskTable" style="margin: 0;">
+                            <thead style="background-color: var(--bg-main);">
+                                <tr>
+                                    <th style="width: 25%">Thời gian</th>
+                                    <th style="width: 50%">Nội dung công việc</th>
+                                    <th style="width: 25%">Trạng thái</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:if="${#lists.isEmpty(tasks)}">
+                                    <td colspan="3" style="text-align: center; padding: 20px; color: var(--text-secondary);">Chưa có công việc nào.</td>
+                                </tr>
+                                <tr th:each="task : ${tasks}" style="cursor: pointer;" 
+                                    th:data-status="${task.message.endsWith('[HOÀN THÀNH]') ? 'Hoàn thành' : 'Chưa hoàn thành'}"
+                                    th:onclick="'selectRow(this, \'' + ${task.id} + '\', \'' + (${task.message.endsWith('[HOÀN THÀNH]')} ? 'Hoàn thành' : 'Chưa hoàn thành') + '\')'">
+                                    <td th:text="${#temporals.format(task.createdAt, 'dd/MM/yyyy HH:mm')}"></td>
+                                    <td th:text="${task.message.replace(' [HOÀN THÀNH]', '')}"></td>
+                                    <td>
+                                        <span th:if="${task.message.endsWith('[HOÀN THÀNH]')}" style="color: var(--color-success); font-weight: bold;">Hoàn thành</span>
+                                        <span th:unless="${task.message.endsWith('[HOÀN THÀNH]')}" style="color: var(--color-danger); font-weight: bold;">Chưa hoàn thành</span>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 15px;">
+                        <button class="btn-danger" onclick="deleteTask()">Xóa</button>
+                        <button class="btn-success" onclick="markDone()">Đánh dấu Hoàn thành</button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+    
+    <!-- Hidden Forms -->
+    <form id="markDoneForm" th:action="@{/admin/giaoviec/mark-done}" method="post" style="display:none;">
+        <input type="hidden" name="id" id="markDoneFormId">
+    </form>
+    
+    <form id="deleteForm" th:action="@{/admin/giaoviec/delete}" method="post" style="display:none;">
+        <input type="hidden" name="id" id="deleteFormId">
+    </form>
+</body>
+</html>

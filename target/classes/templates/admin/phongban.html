@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Hệ Thống Quản Lý - Quản lý Phòng Ban</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <script>
+        var selectedEmpId = null;
+
+        function selectRow(row, empId) {
+            var rows = document.querySelectorAll('#employeeTable tbody tr');
+            rows.forEach(r => {
+                r.style.backgroundColor = '';
+                r.classList.remove('selected-row');
+            });
+            row.style.backgroundColor = 'rgba(37, 99, 235, 0.1)';
+            row.classList.add('selected-row');
+            selectedEmpId = empId;
+        }
+
+        function filterDepartment() {
+            var val = document.getElementById("cbSelectDepartment").value;
+            window.location.href = '/admin/phongban?selectedDep=' + encodeURIComponent(val);
+        }
+
+        function showAddDialog() {
+            var name = prompt("Nhập tên Phòng ban mới:");
+            if (name && name.trim() !== '') {
+                document.getElementById('addFormName').value = name;
+                document.getElementById('addForm').submit();
+            }
+        }
+
+        function showEditDialog() {
+            var selectedDep = document.getElementById("cbSelectDepartment").value;
+            if (selectedDep === '-- Tất cả phòng ban --' || selectedDep === 'Chung') {
+                alert("Vui lòng chọn một phòng ban cụ thể để sửa tên!");
+                return;
+            }
+            var newName = prompt("Nhập tên mới cho phòng '" + selectedDep + "':", selectedDep);
+            if (newName && newName.trim() !== '' && newName !== selectedDep) {
+                document.getElementById('editFormOldName').value = selectedDep;
+                document.getElementById('editFormNewName').value = newName;
+                document.getElementById('editForm').submit();
+            }
+        }
+
+        function showDeleteDialog() {
+            var selectedDep = document.getElementById("cbSelectDepartment").value;
+            if (selectedDep === '-- Tất cả phòng ban --' || selectedDep === 'Chung') {
+                alert("Vui lòng chọn một phòng ban cụ thể để xóa (không thể xóa '-- Tất cả phòng ban --' hoặc 'Chung')!");
+                return;
+            }
+            if (confirm("Bạn có chắc chắn muốn xóa phòng ban '" + selectedDep + "'?\nToàn bộ nhân viên thuộc phòng này sẽ được chuyển về nhóm 'Chung'.")) {
+                document.getElementById('deleteFormName').value = selectedDep;
+                document.getElementById('deleteForm').submit();
+            }
+        }
+
+        function showChangeEmpDialog() {
+            if (!selectedEmpId) {
+                alert("Vui lòng chọn một nhân viên trong bảng!");
+                return;
+            }
+            document.getElementById('modalEmpId').value = selectedEmpId;
+            document.getElementById('changeEmpModal').style.display = 'flex';
+        }
+        
+        function hideChangeEmpDialog() {
+            document.getElementById('changeEmpModal').style.display = 'none';
+        }
+    </script>
+    <style>
+        .selected-row {
+            border-left: 3px solid var(--color-login);
+        }
+        /* Modal Style */
+        .modal {
+            display: none;
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5);
+            justify-content: center; align-items: center;
+            z-index: 1000;
+        }
+        .modal-content {
+            background: var(--bg-card);
+            padding: 20px;
+            border-radius: 8px;
+            width: 400px;
+            max-width: 90%;
+        }
+        .modal-content select, .modal-content input {
+            width: 100%; padding: 8px; margin-top: 5px; margin-bottom: 15px;
+            border: 1px solid var(--border-color); border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Sidebar Fragment -->
+        <div th:replace="~{fragments/sidebar :: sidebar('phongban')}"></div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h2 class="page-title" style="margin: 0;">Quản lý Phòng Ban</h2>
+            </div>
+            
+            <div class="content-card" style="margin-bottom: 20px;">
+                <div style="display: flex; align-items: center; gap: 15px; flex-wrap: wrap;">
+                    <label style="font-weight: bold; color: var(--text-primary);">Chọn xem theo Phòng ban:</label>
+                    <select id="cbSelectDepartment" onchange="filterDepartment()" style="padding: 8px; border-radius: 4px; border: 1px solid var(--border-color);">
+                        <option value="-- Tất cả phòng ban --" th:selected="${selectedDep == '-- Tất cả phòng ban --'}">-- Tất cả phòng ban --</option>
+                        <option value="Chung" th:selected="${selectedDep == 'Chung'}">Chung</option>
+                        <option th:each="dep : ${departments}" th:value="${dep.name}" th:text="${dep.name}" th:selected="${selectedDep == dep.name}"></option>
+                    </select>
+
+                    <button class="btn-success" onclick="showAddDialog()">+ Thêm PB</button>
+                    <button class="btn-primary" style="background-color: var(--color-orange);" onclick="showEditDialog()">Sửa tên PB</button>
+                    <button class="btn-danger" onclick="showDeleteDialog()">Xóa PB</button>
+                    <button class="btn-primary" onclick="showChangeEmpDialog()">Đổi Phòng / Chức vụ</button>
+                    <button class="btn-primary" style="background-color: #8b5cf6;" onclick="alert('Tính năng đang cập nhật!')">Xem chi tiết PB</button>
+                </div>
+            </div>
+
+            <div class="content-card" style="padding: 0; overflow: hidden;">
+                <table class="custom-table" id="employeeTable" style="margin: 0;">
+                    <thead style="background-color: var(--bg-main);">
+                        <tr>
+                            <th>Mã NV</th>
+                            <th>Họ tên</th>
+                            <th>Phòng ban</th>
+                            <th>Chức vụ</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:if="${#lists.isEmpty(employees)}">
+                            <td colspan="4" style="text-align: center; color: var(--text-secondary); padding: 20px;">Chưa có nhân viên nào.</td>
+                        </tr>
+                        <tr th:each="emp : ${employees}" style="cursor: pointer;" th:onclick="'selectRow(this, \'' + ${emp.id} + '\')'">
+                            <td th:text="${emp.id}" style="font-weight: bold;"></td>
+                            <td th:text="${emp.name}"></td>
+                            <td th:text="${emp.department}"></td>
+                            <td th:text="${emp.position}"></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+        </div>
+    </div>
+    
+    <!-- Hidden Forms for Submitting Actions -->
+    <form id="addForm" th:action="@{/admin/phongban/add}" method="post" style="display:none;">
+        <input type="hidden" name="name" id="addFormName">
+    </form>
+    <form id="editForm" th:action="@{/admin/phongban/edit}" method="post" style="display:none;">
+        <input type="hidden" name="oldName" id="editFormOldName">
+        <input type="hidden" name="newName" id="editFormNewName">
+    </form>
+    <form id="deleteForm" th:action="@{/admin/phongban/delete}" method="post" style="display:none;">
+        <input type="hidden" name="name" id="deleteFormName">
+    </form>
+
+    <!-- Change Employee Department/Position Modal -->
+    <div id="changeEmpModal" class="modal">
+        <div class="modal-content">
+            <h3 style="margin-top:0; color: var(--text-primary);">Chuyển đổi Công tác</h3>
+            <form th:action="@{/admin/phongban/change-employee}" method="post">
+                <input type="hidden" name="empId" id="modalEmpId">
+                <input type="hidden" name="selectedDep" th:value="${selectedDep}">
+                
+                <label>Phòng ban mới:</label>
+                <select name="newDepartment">
+                    <option value="Chung">Chung</option>
+                    <option th:each="dep : ${departments}" th:value="${dep.name}" th:text="${dep.name}"></option>
+                </select>
+                
+                <label>Chức vụ mới:</label>
+                <input type="text" name="newPosition" required>
+                
+                <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 15px;">
+                    <button type="button" class="btn-danger" onclick="hideChangeEmpDialog()">Hủy</button>
+                    <button type="submit" class="btn-success">Lưu thay đổi</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Hệ Thống Quản Lý - Quản lý Vắng mặt</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <script>
+        var selectedEmpId = null;
+        var selectedStatus = null;
+
+        function selectRow(row, empId, status) {
+            var rows = document.querySelectorAll('#absenceTable tbody tr');
+            rows.forEach(r => {
+                r.style.backgroundColor = '';
+                r.classList.remove('selected-row');
+            });
+            row.style.backgroundColor = 'rgba(37, 99, 235, 0.1)';
+            row.classList.add('selected-row');
+            selectedEmpId = empId;
+            selectedStatus = status;
+        }
+
+        function filterDate() {
+            var val = document.getElementById("datePicker").value;
+            window.location.href = '/admin/vangmat?date=' + encodeURIComponent(val);
+        }
+
+        function changeDate(days) {
+            var d = new Date(document.getElementById("datePicker").value);
+            d.setDate(d.getDate() + days);
+            var year = d.getFullYear();
+            var month = String(d.getMonth() + 1).padStart(2, '0');
+            var day = String(d.getDate()).padStart(2, '0');
+            var newDate = year + '-' + month + '-' + day;
+            window.location.href = '/admin/vangmat?date=' + newDate;
+        }
+        
+        function setToday() {
+            var d = new Date();
+            var year = d.getFullYear();
+            var month = String(d.getMonth() + 1).padStart(2, '0');
+            var day = String(d.getDate()).padStart(2, '0');
+            var newDate = year + '-' + month + '-' + day;
+            window.location.href = '/admin/vangmat?date=' + newDate;
+        }
+
+        function approveLeave() {
+            if (!selectedEmpId) {
+                alert("Vui lòng chọn đơn cần duyệt!");
+                return;
+            }
+            if (selectedStatus !== 'Chờ duyệt') {
+                alert("Chỉ có thể duyệt đơn đang 'Chờ duyệt'!");
+                return;
+            }
+            document.getElementById('approveFormEmpId').value = selectedEmpId;
+            document.getElementById('approveFormDate').value = document.getElementById("datePicker").value;
+            document.getElementById('approveForm').submit();
+        }
+
+        function rejectLeave() {
+            if (!selectedEmpId) {
+                alert("Vui lòng chọn đơn cần từ chối!");
+                return;
+            }
+            if (selectedStatus !== 'Chờ duyệt') {
+                alert("Chỉ có thể từ chối đơn đang 'Chờ duyệt'!");
+                return;
+            }
+            document.getElementById('rejectFormEmpId').value = selectedEmpId;
+            document.getElementById('rejectFormDate').value = document.getElementById("datePicker").value;
+            document.getElementById('rejectForm').submit();
+        }
+
+        function approveAllLeaves() {
+            if (confirm("Bạn có chắc chắn muốn duyệt TẤT CẢ các đơn xin nghỉ (của nhân viên) trong ngày này?")) {
+                document.getElementById('approveAllFormDate').value = document.getElementById("datePicker").value;
+                document.getElementById('approveAllForm').submit();
+            }
+        }
+    </script>
+    <style>
+        .selected-row {
+            border-left: 3px solid var(--color-login);
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Sidebar Fragment -->
+        <div th:replace="~{fragments/sidebar :: sidebar('vangmat')}"></div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <h2 class="page-title" style="margin-top: 0;">Duyệt nghỉ & Quản lý vắng mặt</h2>
+            
+            <div class="content-card" style="margin-bottom: 20px;">
+                <div style="display: flex; align-items: center; gap: 15px; flex-wrap: wrap;">
+                    <label style="font-weight: bold; color: var(--text-primary);">Ngày:</label>
+                    <button class="btn-primary" style="background-color: var(--bg-sidebar); color: var(--text-primary); border: 1px solid var(--border-color);" onclick="changeDate(-1)">&lt;</button>
+                    <input type="date" id="datePicker" th:value="${selectedDate}" onchange="filterDate()" style="padding: 8px; border-radius: 4px; border: 1px solid var(--border-color);">
+                    <button class="btn-primary" style="background-color: var(--bg-sidebar); color: var(--text-primary); border: 1px solid var(--border-color);" onclick="changeDate(1)">&gt;</button>
+                    
+                    <button class="btn-primary" style="background-color: var(--color-orange);" onclick="setToday()">Hôm nay</button>
+                    
+                    <span style="border-left: 1px solid var(--border-color); height: 30px; margin: 0 10px;"></span>
+
+                    <button class="btn-success" onclick="approveLeave()">Duyệt nghỉ</button>
+                    <button class="btn-primary" style="background-color: #3b82f6;" onclick="approveAllLeaves()">Duyệt tất cả của NV</button>
+                    <button class="btn-danger" onclick="rejectLeave()">Từ chối</button>
+                </div>
+            </div>
+
+            <div class="content-card" style="padding: 0; overflow: hidden;">
+                <table class="custom-table" id="absenceTable" style="margin: 0;">
+                    <thead style="background-color: var(--bg-main);">
+                        <tr>
+                            <th>Mã NV</th>
+                            <th>Họ tên</th>
+                            <th>Tình trạng</th>
+                            <th>Lý do / Ca bỏ lỡ</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:if="${#lists.isEmpty(absenceRecords)}">
+                            <td colspan="4" style="text-align: center; color: var(--text-secondary); padding: 20px;">Không có dữ liệu vắng mặt hoặc chờ duyệt.</td>
+                        </tr>
+                        <tr th:each="record : ${absenceRecords}" style="cursor: pointer;" th:onclick="'selectRow(this, \'' + ${record.employeeId} + '\', \'' + ${record.status} + '\')'">
+                            <td th:text="${record.employeeId}" style="font-weight: bold;"></td>
+                            <td th:text="${record.employeeName}"></td>
+                            <td>
+                                <span th:if="${record.status == 'Chờ duyệt'}" style="color: var(--color-orange); font-weight: bold;" th:text="${record.status}"></span>
+                                <span th:if="${record.status == 'Nghỉ CÓ phép'}" style="color: var(--color-success); font-weight: bold;" th:text="${record.status}"></span>
+                                <span th:if="${record.status == 'Bị từ chối nghỉ'}" style="color: var(--color-danger); font-weight: bold;" th:text="${record.status}"></span>
+                                <span th:if="${record.status == 'Nghỉ KHÔNG phép'}" style="color: var(--color-danger); font-weight: bold;" th:text="${record.status}"></span>
+                            </td>
+                            <td th:text="${record.reason}"></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+        </div>
+    </div>
+    
+    <!-- Hidden Forms -->
+    <form id="approveForm" th:action="@{/admin/vangmat/approve}" method="post" style="display:none;">
+        <input type="hidden" name="empId" id="approveFormEmpId">
+        <input type="hidden" name="date" id="approveFormDate">
+    </form>
+    
+    <form id="rejectForm" th:action="@{/admin/vangmat/reject}" method="post" style="display:none;">
+        <input type="hidden" name="empId" id="rejectFormEmpId">
+        <input type="hidden" name="date" id="rejectFormDate">
+    </form>
+    
+    <form id="approveAllForm" th:action="@{/admin/vangmat/approve-all}" method="post" style="display:none;">
+        <input type="hidden" name="date" id="approveAllFormDate">
+    </form>
+</body>
+</html>

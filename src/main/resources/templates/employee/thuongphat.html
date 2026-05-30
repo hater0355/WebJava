@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Quản lý Thưởng/Phạt - Nhân Viên</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+    <div class="app-container">
+        <div th:replace="~{fragments/employee_sidebar :: sidebar('thuongphat')}"></div>
+
+        <div class="main-content">
+            <div class="header">
+                <h2>⚖️ Quản lý Thưởng/Phạt (Dành cho Trưởng phòng)</h2>
+                <div class="user-info">
+                    <span th:text="${employee.name}"></span> - <span th:text="${employee.department}"></span>
+                </div>
+            </div>
+
+            <div class="card">
+                <form th:action="@{/employee/thuongphat}" method="get" class="form-group" style="display: flex; gap: 15px; align-items: flex-end;">
+                    <div style="flex: 1;">
+                        <label>Tháng</label>
+                        <input type="number" name="month" th:value="${selectedMonth}" min="1" max="12" class="form-control" required>
+                    </div>
+                    <div style="flex: 1;">
+                        <label>Năm</label>
+                        <input type="number" name="year" th:value="${selectedYear}" min="2000" max="2100" class="form-control" required>
+                    </div>
+                    <div>
+                        <button type="submit" class="btn btn-primary">Lọc Dữ Liệu</button>
+                    </div>
+                </form>
+            </div>
+
+            <div class="card" style="margin-top: 20px;">
+                <h3>Thêm Quyết Định Thưởng/Phạt</h3>
+                <form th:action="@{/employee/thuongphat/add}" method="post" class="form-group">
+                    <input type="hidden" name="month" th:value="${selectedMonth}">
+                    <input type="hidden" name="year" th:value="${selectedYear}">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                        <div>
+                            <label>Chọn Nhân Viên</label>
+                            <select name="empId" class="form-control" required>
+                                <option value="" disabled selected>-- Chọn nhân viên --</option>
+                                <option th:each="emp : ${deptEmployees}" th:value="${emp.id}" th:text="${emp.id + ' - ' + emp.name}"></option>
+                            </select>
+                        </div>
+                        <div>
+                            <label>Số Tiền (VND) - Số âm nếu phạt</label>
+                            <input type="number" name="amount" class="form-control" placeholder="Ví dụ: 500000 hoặc -200000" required>
+                        </div>
+                    </div>
+                    <div style="margin-top: 15px;">
+                        <label>Lý Do</label>
+                        <input type="text" name="reason" class="form-control" required>
+                    </div>
+                    <button type="submit" class="btn btn-success" style="margin-top: 15px;">Thêm Quyết Định</button>
+                </form>
+            </div>
+
+            <div class="card" style="margin-top: 20px;">
+                <h3>Lịch Sử Thưởng/Phạt Tháng <span th:text="${selectedMonth}"></span>/<span th:text="${selectedYear}"></span></h3>
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Mã NV</th>
+                            <th>Số Tiền</th>
+                            <th>Lý Do</th>
+                            <th>Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="record : ${records}">
+                            <td th:text="${record.employeeId}"></td>
+                            <td th:text="${#numbers.formatDecimal(record.amount, 0, 'COMMA', 0, 'POINT')} + ' VND'" th:style="${record.amount < 0 ? 'color: red;' : 'color: green;'}"></td>
+                            <td th:text="${record.reason}"></td>
+                            <td>
+                                <form th:action="@{/employee/thuongphat/delete}" method="post" style="display: inline;" onsubmit="return confirm('Bạn có chắc chắn muốn xóa?');">
+                                    <input type="hidden" name="id" th:value="${record.id}">
+                                    <button type="submit" class="btn btn-danger" th:if="${record.recordedBy == employee.id}">Xóa</button>
+                                </form>
+                            </td>
+                        </tr>
+                        <tr th:if="${#lists.isEmpty(records)}">
+                            <td colspan="4" style="text-align: center; color: var(--text-secondary);">Chưa có dữ liệu thưởng/phạt</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+        </div>
+    </div>
+</body>
+</html>

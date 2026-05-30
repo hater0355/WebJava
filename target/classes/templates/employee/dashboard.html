@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Cổng Nhân Viên - Làm Việc</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Sidebar Fragment -->
+        <div th:replace="~{fragments/employee_sidebar :: sidebar('dashboard')}"></div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <h2 class="page-title">Chào mừng, <span th:text="${employee.name}"></span>!</h2>
+
+            <div style="display: flex; gap: 20px;">
+                
+                <!-- Cột trái: Thông tin & Check-in -->
+                <div style="flex: 2;">
+                    <!-- Bảng Check-in/Check-out -->
+                    <div class="content-card" style="text-align: center; padding: 40px 20px;">
+                        <h3 style="margin-top: 0; color: var(--color-login);">Chấm công ngày hôm nay</h3>
+                        
+                        <div style="margin: 30px 0;">
+                            <p th:if="${todayTk == null}" style="font-size: 18px; color: var(--text-secondary);">Bạn chưa chấm công vào ca.</p>
+                            <p th:if="${todayTk != null && todayTk.checkIn != null && todayTk.checkOut == null}" style="font-size: 18px; color: var(--color-login); font-weight: bold;">
+                                Đã vào ca lúc: <span th:text="${todayTk.checkIn}"></span>
+                            </p>
+                            <p th:if="${todayTk != null && todayTk.checkOut != null}" style="font-size: 18px; color: var(--color-register); font-weight: bold;">
+                                Hoàn thành ca: <span th:text="${todayTk.checkIn}"></span> - <span th:text="${todayTk.checkOut}"></span>
+                            </p>
+                        </div>
+
+                        <div style="display: flex; justify-content: center; gap: 20px;">
+                            <form th:action="@{/employee/checkin}" method="post">
+                                <button type="submit" class="btn-primary" style="padding: 12px 30px; font-size: 16px; width: 200px;" 
+                                        th:disabled="${todayTk != null && todayTk.checkIn != null}"
+                                        th:style="${todayTk != null && todayTk.checkIn != null ? 'background-color: var(--text-secondary); cursor: not-allowed; padding: 12px 30px; font-size: 16px; width: 200px;' : 'padding: 12px 30px; font-size: 16px; width: 200px;'}">
+                                    Check-In Vào Ca
+                                </button>
+                            </form>
+                            <form th:action="@{/employee/checkout}" method="post">
+                                <button type="submit" class="btn-success" style="padding: 12px 30px; font-size: 16px; width: 200px;" 
+                                        th:disabled="${todayTk == null || todayTk.checkIn == null || todayTk.checkOut != null}"
+                                        th:style="${todayTk == null || todayTk.checkIn == null || todayTk.checkOut != null ? 'background-color: var(--text-secondary); cursor: not-allowed; padding: 12px 30px; font-size: 16px; width: 200px;' : 'padding: 12px 30px; font-size: 16px; width: 200px;'}">
+                                    Check-Out Tan Ca
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Cột phải: Thông tin hồ sơ -->
+                <div style="flex: 1;">
+                    <div class="content-card">
+                        <h4 style="margin-top: 0; color: var(--text-primary); border-bottom: 1px solid var(--border-color); padding-bottom: 10px;">Hồ sơ cá nhân</h4>
+                        <div style="line-height: 1.8; margin-top: 15px;">
+                            <p style="margin: 5px 0;"><strong>Mã NV:</strong> <span th:text="${employee.id}"></span></p>
+                            <p style="margin: 5px 0;"><strong>Phòng ban:</strong> <span th:text="${employee.department}"></span></p>
+                            <p style="margin: 5px 0;"><strong>Chức vụ:</strong> <span th:text="${employee.position}"></span></p>
+                            <p style="margin: 5px 0;"><strong>Lương cơ bản:</strong> <span th:text="${#numbers.formatDecimal(employee.baseSalary, 0, 'COMMA', 0, 'POINT')} + ' đ'"></span></p>
+                            <p style="margin: 5px 0;"><strong>Người phụ thuộc:</strong> <span th:text="${employee.nguoiPhuThuoc}"></span></p>
+                        </div>
+                    </div>
+                    
+                    <div class="content-card" style="text-align: center;">
+                        <h4 style="margin-top: 0; color: var(--text-primary);">Tra cứu Phiếu lương</h4>
+                        <form th:action="@{/employee/salary}" method="get" style="display: flex; flex-direction: column; gap: 10px; margin-top: 15px;">
+                            <select name="month" class="rounded-textfield">
+                                <option th:each="m : ${#numbers.sequence(1, 12)}" th:value="${m}" th:text="'Tháng ' + ${m}" th:selected="${m == 5}"></option>
+                            </select>
+                            <select name="year" class="rounded-textfield">
+                                <option value="2024">Năm 2024</option>
+                                <option value="2025" selected>Năm 2025</option>
+                                <option value="2026">Năm 2026</option>
+                            </select>
+                            <button type="submit" class="btn-warning" style="padding: 10px; margin-top: 10px;">Xem chi tiết</button>
+                        </form>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Chart Section -->
+            <div class="content-card" style="margin-top: 20px;">
+                <h3 style="margin-top: 0; color: var(--text-secondary); font-size: 18px;">Lịch sử nhận lương 6 tháng gần nhất</h3>
+                <div style="height: 350px; display: flex; align-items: center; justify-content: center; background-color: rgba(0,0,0,0.02); border-radius: 10px; border: 1px dashed var(--border-color); padding: 20px;">
+                    <canvas id="salaryLineChart"></canvas>
+                </div>
+            </div>
+            
+        </div>
+    </div>
+
+    <!-- Script for Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script th:inline="javascript">
+        /*<![CDATA[*/
+        var chartLabels = /*[[${chartLabels}]]*/ [];
+        var chartValues = /*[[${chartValues}]]*/ [];
+
+        if (chartLabels.length > 0) {
+            var ctx = document.getElementById('salaryLineChart').getContext('2d');
+            
+            var gradient = ctx.createLinearGradient(0, 0, 0, 400);
+            gradient.addColorStop(0, 'rgba(59, 130, 246, 0.5)'); // blue with opacity
+            gradient.addColorStop(1, 'rgba(59, 130, 246, 0.0)');
+            
+            var myChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: chartLabels,
+                    datasets: [{
+                        label: 'Thực lĩnh',
+                        data: chartValues,
+                        borderColor: '#3b82f6',
+                        backgroundColor: gradient,
+                        borderWidth: 2,
+                        pointBackgroundColor: '#fff',
+                        pointBorderColor: '#3b82f6',
+                        pointRadius: 4,
+                        fill: true,
+                        tension: 0.3 // Smooth curves
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value, index, values) {
+                                    return new Intl.NumberFormat('vi-VN').format(value) + ' đ';
+                                }
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.dataset.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    if (context.parsed.y !== null) {
+                                        label += new Intl.NumberFormat('vi-VN').format(context.parsed.y) + ' VNĐ';
+                                    }
+                                    return label;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        } else {
+            document.getElementById('salaryLineChart').outerHTML = '<p style="color: var(--text-secondary);">Chưa có dữ liệu</p>';
+        }
+        /*]]>*/
+    </script>
+</body>
+</html>

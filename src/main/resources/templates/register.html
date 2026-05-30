@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Hệ Thống Quản Lý Công Ty - Đăng Ký</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <style>
+        .auth-card {
+            width: 450px;
+            padding: 30px 40px;
+        }
+        .input-group {
+            margin-bottom: 15px;
+        }
+        .auth-title {
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+        select.rounded-textfield {
+            appearance: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            cursor: pointer;
+        }
+        .switch-link {
+            display: block;
+            text-align: center;
+            margin-top: 20px;
+            color: var(--color-login);
+        }
+        .form-label.disabled-label {
+            color: #c8c8c8;
+        }
+    </style>
+</head>
+<body class="auth-body">
+    <div class="auth-card">
+        <h1 class="auth-title register">TẠO TÀI KHOẢN</h1>
+
+        <form id="registerForm">
+            <div class="input-group">
+                <label class="form-label">Bạn là ai?</label>
+                <select name="role" id="roleSelect" class="rounded-textfield" onchange="toggleCompanyCode()">
+                    <option value="ADMIN">Người Quản Lý (Tạo công ty)</option>
+                    <option value="EMPLOYEE">Nhân Viên (Xin việc)</option>
+                </select>
+            </div>
+
+            <div class="input-group">
+                <label class="form-label">Tên tài khoản:</label>
+                <input type="text" name="username" class="rounded-textfield" required>
+            </div>
+
+            <div class="input-group">
+                <label class="form-label">Họ và Tên:</label>
+                <input type="text" name="fullName" class="rounded-textfield" required>
+            </div>
+
+            <div class="input-group">
+                <label class="form-label">Email:</label>
+                <input type="email" name="email" class="rounded-textfield" required>
+            </div>
+
+            <div class="input-group">
+                <label class="form-label">Số điện thoại:</label>
+                <input type="text" name="phone" class="rounded-textfield" required>
+            </div>
+
+            <div class="input-group">
+                <label class="form-label disabled-label" id="lblCompanyCode">Mã công ty (Chỉ Nhân viên cần điền):</label>
+                <input type="text" name="companyCode" id="companyCode" class="rounded-textfield" disabled>
+            </div>
+
+            <div class="input-group">
+                <label class="form-label">Mật khẩu:</label>
+                <input type="password" name="password" id="password" class="rounded-textfield" required>
+            </div>
+
+            <div class="input-group">
+                <label class="form-label">Xác nhận mật khẩu:</label>
+                <input type="password" id="confirmPassword" class="rounded-textfield" required>
+            </div>
+
+            <button type="button" class="rounded-button btn-register" onclick="submitRegister()">Hoàn tất đăng ký</button>
+        </form>
+
+        <a th:href="@{/login}" class="link-text switch-link">Đã có tài khoản? Quay lại Đăng nhập.</a>
+    </div>
+
+    <script>
+        function toggleCompanyCode() {
+            var role = document.getElementById("roleSelect").value;
+            var compCodeInput = document.getElementById("companyCode");
+            var lblCompCode = document.getElementById("lblCompanyCode");
+
+            if (role === "EMPLOYEE") {
+                compCodeInput.disabled = false;
+                lblCompCode.classList.remove("disabled-label");
+            } else {
+                compCodeInput.disabled = true;
+                compCodeInput.value = "";
+                lblCompCode.classList.add("disabled-label");
+            }
+        }
+
+        function submitRegister() {
+            var formData = new FormData(document.getElementById("registerForm"));
+            var pass = document.getElementById("password").value;
+            var confirmPass = document.getElementById("confirmPassword").value;
+
+            if (pass !== confirmPass) {
+                alert("Mật khẩu xác nhận không khớp!");
+                return;
+            }
+
+            var role = formData.get("role");
+            if (role === "EMPLOYEE" && !formData.get("companyCode")) {
+                alert("Nhân viên bắt buộc phải điền Mã công ty giới thiệu!");
+                return;
+            }
+
+            fetch('/register', {
+                method: 'POST',
+                body: new URLSearchParams(formData)
+            })
+            .then(response => response.text())
+            .then(result => {
+                if (result === "EXISTED") {
+                    alert("Tài khoản hoặc Email đã tồn tại!");
+                } else if (result === "SUCCESS_ADMIN") {
+                    alert("Tạo tài khoản Quản lý thành công!\n(Mã công ty nằm ở góc dưới bên trái màn hình làm việc)");
+                    window.location.href = "/login";
+                } else if (result === "SUCCESS") {
+                    alert("Đăng ký thành công!\nHồ sơ đã được gửi đi. Vui lòng chờ Giám đốc duyệt.");
+                    window.location.href = "/login";
+                } else {
+                    alert("Lỗi: " + result);
+                }
+            })
+            .catch(error => {
+                alert("Đã xảy ra lỗi kết nối!");
+                console.error(error);
+            });
+        }
+    </script>
+</body>
+</html>

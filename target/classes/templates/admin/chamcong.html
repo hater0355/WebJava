@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Hệ Thống Quản Lý - Chấm công</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Sidebar Fragment -->
+        <div th:replace="~{fragments/sidebar :: sidebar('chamcong')}"></div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <h2 class="page-title">Chấm công hàng ngày</h2>
+
+            <div class="content-card" style="display: flex; gap: 15px; align-items: center; margin-bottom: 20px;">
+                <form th:action="@{/admin/chamcong}" method="get" style="display: flex; gap: 15px; align-items: center; width: 100%;">
+                    <label style="font-weight: bold; color: var(--text-secondary);">Chọn ngày:</label>
+                    <input type="date" name="date" class="rounded-textfield" th:value="${selectedDate}" style="width: 200px;">
+                    <button type="submit" class="btn-primary" style="padding: 8px 25px;">Lọc</button>
+                </form>
+            </div>
+
+            <div class="content-card" style="padding: 0; overflow: hidden;">
+                <table class="custom-table" style="margin: 0;">
+                    <thead style="background-color: var(--bg-main);">
+                        <tr>
+                            <th>Mã NV</th>
+                            <th>Họ tên</th>
+                            <th>Giờ vào</th>
+                            <th>Giờ ra</th>
+                            <th>Trạng thái</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:if="${#lists.isEmpty(employees)}">
+                            <td colspan="5" style="text-align: center; color: var(--text-secondary); padding: 20px;">Không có nhân viên nào.</td>
+                        </tr>
+                        <tr th:each="emp, stat : ${employees}">
+                            <td th:text="${emp.id}" style="font-weight: bold;"></td>
+                            <td th:text="${emp.name}"></td>
+                            
+                            <th:block th:with="tk=${attendanceRecords[stat.index]}">
+                                <td>
+                                    <span th:if="${tk.checkIn != null}" th:text="${tk.checkIn}" style="color: var(--color-login); font-weight: bold;"></span>
+                                    <span th:if="${tk.checkIn == null}" style="color: var(--text-secondary);">-</span>
+                                </td>
+                                <td>
+                                    <span th:if="${tk.checkOut != null}" th:text="${tk.checkOut}" style="color: var(--color-register); font-weight: bold;"></span>
+                                    <span th:if="${tk.checkOut == null}" style="color: var(--text-secondary);">-</span>
+                                </td>
+                                <td>
+                                    <span th:if="${tk.checkIn != null && tk.checkOut != null}" style="color: var(--color-register); font-weight: bold;">Hoàn thành</span>
+                                    <span th:if="${tk.checkIn != null && tk.checkOut == null}" style="color: var(--color-orange); font-weight: bold;">Đang làm việc</span>
+                                    <span th:if="${tk.checkIn == null}" style="color: var(--color-danger); font-weight: bold;">Vắng mặt</span>
+                                </td>
+                            </th:block>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+        </div>
+    </div>
+</body>
+</html>

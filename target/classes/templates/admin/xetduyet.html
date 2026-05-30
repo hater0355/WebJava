@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Hệ Thống Quản Lý - Xét duyệt hồ sơ</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Sidebar Fragment -->
+        <div th:replace="~{fragments/sidebar :: sidebar('xetduyet')}"></div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <h2 class="page-title">Hồ sơ chờ phê duyệt</h2>
+
+            <div class="content-card">
+                <div th:if="${#lists.isEmpty(pendingEmps)}">
+                    <p style="color: var(--text-secondary); text-align: center; padding: 20px;">Không có hồ sơ nào đang chờ duyệt.</p>
+                </div>
+                
+                <table class="custom-table" th:if="${not #lists.isEmpty(pendingEmps)}">
+                    <thead>
+                        <tr>
+                            <th>Mã NV</th>
+                            <th>Họ tên</th>
+                            <th>Xếp Phòng ban</th>
+                            <th>Định mức Chức vụ</th>
+                            <th>Set Lương cơ bản</th>
+                            <th>Hành động</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="p : ${pendingEmps}">
+                            <form th:action="@{/admin/approve-employee}" method="post">
+                                <input type="hidden" name="empId" th:value="${p.id}">
+                                <td th:text="${p.id}" style="font-weight: bold;"></td>
+                                <td th:text="${p.name}"></td>
+                                <td><input type="text" name="department" class="rounded-textfield" required value="Chung" style="height: 30px; font-size: 13px;"></td>
+                                <td><input type="text" name="position" class="rounded-textfield" required value="Nhân viên bậc 1" style="height: 30px; font-size: 13px;"></td>
+                                <td><input type="number" name="baseSalary" class="rounded-textfield" required value="5000000" style="height: 30px; font-size: 13px;"></td>
+                                <td><button type="submit" class="btn-success" style="padding: 6px 15px; font-size: 13px;">Duyệt & Phân Phòng</button></td>
+                            </form>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Hệ Thống Quản Lý - Danh sách nhân viên</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <script>
+        var selectedEmpId = null;
+        var selectedEmpName = null;
+        var selectedBaseSalary = 0;
+        var selectedNpt = 0;
+        var selectedDob = "";
+        var selectedPhone = "";
+        var selectedFamily = "";
+        var selectedJoinDate = "";
+
+        function selectRow(row, empId, empName, baseSalary, npt, dob, phone, family, joinDate) {
+            // Deselect all
+            var rows = document.querySelectorAll('#employeeTable tbody tr');
+            rows.forEach(r => {
+                r.style.backgroundColor = '';
+                r.classList.remove('selected-row');
+            });
+            
+            // Select current
+            row.style.backgroundColor = 'rgba(37, 99, 235, 0.1)';
+            row.classList.add('selected-row');
+            selectedEmpId = empId;
+            selectedEmpName = empName;
+            selectedBaseSalary = baseSalary;
+            selectedNpt = npt;
+            selectedDob = dob;
+            selectedPhone = phone;
+            selectedFamily = family;
+            selectedJoinDate = joinDate;
+        }
+
+        function viewSchedule() {
+            if (!selectedEmpId) {
+                alert("Vui lòng chọn 1 nhân viên trong bảng để xem lịch!");
+                return;
+            }
+            window.location.href = '/admin/nhanvien/' + selectedEmpId + '/lich';
+        }
+
+        function viewDetails() {
+            if (!selectedEmpId) {
+                alert("Vui lòng chọn 1 nhân viên để xem chi tiết!");
+                return;
+            }
+            document.getElementById("detailId").innerText = selectedEmpId;
+            document.getElementById("detailName").innerText = selectedEmpName;
+            document.getElementById("detailDob").innerText = selectedDob || "Chưa cập nhật";
+            document.getElementById("detailPhone").innerText = selectedPhone || "Chưa cập nhật";
+            document.getElementById("detailFamily").innerText = selectedFamily || "Chưa cập nhật";
+            document.getElementById("detailJoinDate").innerText = selectedJoinDate || "Chưa cập nhật";
+            document.getElementById("detailModal").style.display = "flex";
+        }
+
+        function closeDetailModal() {
+            document.getElementById("detailModal").style.display = "none";
+        }
+
+        function openEditSalaryModal() {
+            if (!selectedEmpId) {
+                alert("Vui lòng chọn 1 nhân viên để sửa lương & NPT!");
+                return;
+            }
+            document.getElementById("editEmpId").value = selectedEmpId;
+            document.getElementById("editEmpName").innerText = selectedEmpName;
+            document.getElementById("editSalary").value = selectedBaseSalary;
+            document.getElementById("editNpt").value = selectedNpt;
+            document.getElementById("editSalaryModal").style.display = "flex";
+        }
+
+        function closeEditSalaryModal() {
+            document.getElementById("editSalaryModal").style.display = "none";
+        }
+
+        function deleteEmployee() {
+            if (!selectedEmpId) {
+                alert("Vui lòng chọn 1 nhân viên để xóa!");
+                return;
+            }
+            if (confirm("Bạn có chắc chắn muốn xóa nhân viên " + selectedEmpName + " khỏi hệ thống?")) {
+                document.getElementById('deleteEmpId').value = selectedEmpId;
+                document.getElementById('deleteForm').submit();
+            }
+        }
+        
+        function triggerImport() {
+            document.getElementById('csvFileInput').click();
+        }
+
+        function handleFileSelect(event) {
+            var file = event.target.files[0];
+            if (file) {
+                if (confirm("Xác nhận nhập danh sách nhân viên từ file " + file.name + "?")) {
+                    document.getElementById('importForm').submit();
+                } else {
+                    event.target.value = "";
+                }
+            }
+        }
+    </script>
+    <style>
+        .selected-row {
+            border-left: 3px solid var(--color-login);
+        }
+        /* Modal Style */
+        .modal {
+            display: none;
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5);
+            justify-content: center; align-items: center;
+            z-index: 1000;
+        }
+        .modal-content {
+            background: var(--bg-card);
+            padding: 20px;
+            border-radius: 8px;
+            width: 400px;
+            max-width: 90%;
+            color: var(--text-primary);
+        }
+        .modal-content input {
+            width: 100%; padding: 8px; margin-top: 5px; margin-bottom: 15px;
+            border: 1px solid var(--border-color); border-radius: 4px;
+        }
+        .detail-row {
+            display: flex; margin-bottom: 10px; border-bottom: 1px solid var(--border-color); padding-bottom: 5px;
+        }
+        .detail-label {
+            font-weight: bold; width: 150px;
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Sidebar Fragment -->
+        <div th:replace="~{fragments/sidebar :: sidebar('nhanvien')}"></div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h2 class="page-title" style="margin: 0;">Danh sách nhân viên</h2>
+                
+                <div style="display: flex; gap: 10px;">
+                    <form id="importForm" th:action="@{/admin/nhanvien/import-csv}" method="post" enctype="multipart/form-data" style="display:none;">
+                        <input type="file" id="csvFileInput" name="file" accept=".csv" onchange="handleFileSelect(event)">
+                    </form>
+                    <button class="btn-success" onclick="triggerImport()">Nhập Excel (CSV)</button>
+                    <a th:href="@{/admin/export-excel}" class="btn-primary" style="text-decoration: none; display: inline-block;">Xuất Excel</a>
+                    <button class="btn-primary" style="background-color: #8b5cf6;" onclick="viewSchedule()">Lịch & Tăng ca</button>
+                    <button class="btn-primary" onclick="viewDetails()">Xem chi tiết hồ sơ</button>
+                    <button class="btn-primary" style="background-color: #4b5563;" onclick="openEditSalaryModal()">Sửa Lương & NPT</button>
+                    <button class="btn-danger" onclick="deleteEmployee()">Xóa</button>
+                </div>
+            </div>
+
+            <div class="content-card" style="padding: 0; overflow: hidden;">
+                <table class="custom-table" id="employeeTable" style="margin: 0;">
+                    <thead style="background-color: var(--bg-main);">
+                        <tr>
+                            <th>Mã NV</th>
+                            <th>Họ tên</th>
+                            <th>Phòng ban</th>
+                            <th>Chức vụ</th>
+                            <th>Lương cơ bản</th>
+                            <th>Người PT</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:if="${#lists.isEmpty(employees)}">
+                            <td colspan="6" style="text-align: center; color: var(--text-secondary); padding: 20px;">Chưa có nhân viên nào.</td>
+                        </tr>
+                        <tr th:each="emp : ${employees}" style="cursor: pointer;" 
+                            th:onclick="selectRow(this, [[${emp.id}]], [[${emp.name}]], [[${emp.baseSalary}]], [[${emp.nguoiPhuThuoc}]], [[${emp.ngaySinh != null ? emp.ngaySinh.toString() : ''}]], [[${emp.lienLacKhan}]], [[${emp.giaDinh}]], [[${emp.ngayVaoLam != null ? emp.ngayVaoLam.toString() : ''}]])">
+                            <td th:text="${emp.id}" style="font-weight: bold;"></td>
+                            <td th:text="${emp.name}"></td>
+                            <td th:text="${emp.department}"></td>
+                            <td th:text="${emp.position}"></td>
+                            <td th:text="${#numbers.formatDecimal(emp.baseSalary, 0, 'COMMA', 0, 'POINT')} + ' VNĐ'"></td>
+                            <td th:text="${emp.nguoiPhuThuoc}"></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+        </div>
+    </div>
+    
+    <form id="deleteForm" th:action="@{/admin/nhanvien/delete}" method="post" style="display:none;">
+        <input type="hidden" name="empId" id="deleteEmpId">
+    </form>
+
+    <!-- Modal Chi tiết hồ sơ -->
+    <div id="detailModal" class="modal">
+        <div class="modal-content" style="width: 500px;">
+            <h3 style="margin-top:0; border-bottom: 2px solid var(--color-orange); padding-bottom: 10px;">Chi Tiết Hồ Sơ Nhân Viên</h3>
+            
+            <div class="detail-row"><div class="detail-label">Mã Nhân Viên:</div><div id="detailId"></div></div>
+            <div class="detail-row"><div class="detail-label">Họ và Tên:</div><div id="detailName" style="font-weight: bold;"></div></div>
+            <div class="detail-row"><div class="detail-label">Ngày Sinh:</div><div id="detailDob"></div></div>
+            <div class="detail-row"><div class="detail-label">Ngày Vào Làm:</div><div id="detailJoinDate"></div></div>
+            <div class="detail-row"><div class="detail-label">Liên Lạc Khẩn:</div><div id="detailPhone"></div></div>
+            <div class="detail-row"><div class="detail-label">Gia Đình:</div><div id="detailFamily"></div></div>
+            
+            <div style="display: flex; justify-content: flex-end; margin-top: 20px;">
+                <button type="button" class="btn-danger" onclick="closeDetailModal()">Đóng</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Sửa Lương & NPT -->
+    <div id="editSalaryModal" class="modal">
+        <div class="modal-content">
+            <h3 style="margin-top:0;">Cập nhật Lương & NPT</h3>
+            <p style="color: var(--color-orange); font-weight: bold;" id="editEmpName"></p>
+            <form th:action="@{/admin/nhanvien/update-salary}" method="post">
+                <input type="hidden" name="empId" id="editEmpId">
+                
+                <label>Lương cơ bản (VNĐ):</label>
+                <input type="number" name="baseSalary" id="editSalary" required step="100000">
+                
+                <label>Số người phụ thuộc:</label>
+                <input type="number" name="npt" id="editNpt" required min="0" max="20">
+                
+                <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 15px;">
+                    <button type="button" class="btn-danger" onclick="closeEditSalaryModal()">Hủy</button>
+                    <button type="submit" class="btn-success">Lưu thay đổi</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+</body>
+</html>

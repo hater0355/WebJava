@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Cổng Nhân Viên - Phiếu Lương</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <style>
+        .slip-container {
+            max-width: 700px;
+            margin: 0 auto;
+        }
+        .slip-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px dashed var(--border-color);
+        }
+        .slip-row.total {
+            border-bottom: none;
+            background-color: rgba(16, 185, 129, 0.1);
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+            align-items: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Sidebar Fragment -->
+        <div th:replace="~{fragments/employee_sidebar :: sidebar('salary')}"></div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            
+            <div class="slip-container">
+                <div style="margin-bottom: 20px;">
+                    <a th:href="@{/employee/dashboard}" style="text-decoration: none; color: var(--text-secondary);">← Trở về Trang chủ</a>
+                </div>
+
+                <div th:if="${salaryRecord == null}" class="content-card" style="text-align: center; padding: 40px;">
+                    <p style="color: var(--color-danger); font-weight: bold; font-size: 18px;">Không tìm thấy dữ liệu lương cho kỳ này!</p>
+                </div>
+
+                <div th:if="${salaryRecord != null}" class="content-card p-5 shadow-lg">
+                    <h2 style="text-align: center; color: var(--color-orange); margin-bottom: 5px;">PHIẾU LƯƠNG CHI TIẾT</h2>
+                    <p style="text-align: center; color: var(--text-secondary);">Kỳ lương: <strong th:text="${salaryRecord.monthYear}"></strong></p>
+                    
+                    <hr style="border-color: var(--border-color); margin: 20px 0;">
+                    
+                    <div class="slip-row" style="border: none; margin-bottom: 10px;">
+                        <span style="font-size: 16px;">Nhân viên: <strong th:text="${salaryRecord.employeeName}"></strong></span>
+                    </div>
+                    
+                    <div class="slip-row">
+                        <span>Ngày thường làm việc (Hệ số 1.0)</span>
+                        <strong><span th:text="${salaryRecord.finalRegularDays}"></span> ngày</strong>
+                    </div>
+                    <div class="slip-row">
+                        <span>Tăng ca cuối tuần (Hệ số 2.0)</span>
+                        <strong><span th:text="${salaryRecord.finalOvertimeDays}"></span> ngày</strong>
+                    </div>
+                    <div class="slip-row" style="border-bottom: 2px solid var(--border-color);">
+                        <span>Tổng thời gian làm việc ghi nhận</span>
+                        <strong><span th:text="${#numbers.formatDecimal(salaryRecord.totalWorkingHours, 1, 1)}"></span> giờ</strong>
+                    </div>
+
+                    <div class="slip-row" style="color: var(--color-danger); margin-top: 10px;">
+                        <span>Khấu trừ phạt đi muộn / Về sớm / Quên Check-out</span>
+                        <strong>-<span th:text="${#numbers.formatDecimal(salaryRecord.penalty, 0, 'COMMA', 0, 'POINT')} + ' đ'"></span></strong>
+                    </div>
+                    <div class="slip-row" style="color: var(--color-danger);">
+                        <span>Trừ BHXH bắt buộc (10.5%)</span>
+                        <strong>-<span th:text="${#numbers.formatDecimal(salaryRecord.insurance, 0, 'COMMA', 0, 'POINT')} + ' đ'"></span></strong>
+                    </div>
+                    <div class="slip-row" style="color: var(--color-danger); border-bottom: 2px solid var(--border-color);">
+                        <span>Thuế thu nhập cá nhân (Lũy tiến)</span>
+                        <strong>-<span th:text="${#numbers.formatDecimal(salaryRecord.tax, 0, 'COMMA', 0, 'POINT')} + ' đ'"></span></strong>
+                    </div>
+
+                    <div class="slip-row total">
+                        <span style="font-size: 18px; font-weight: bold; color: var(--color-register);">LƯƠNG THỰC LĨNH:</span>
+                        <span style="font-size: 24px; font-weight: bold; color: var(--color-register);" th:text="${#numbers.formatDecimal(salaryRecord.finalSalary, 0, 'COMMA', 0, 'POINT')} + ' VNĐ'"></span>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</body>
+</html>

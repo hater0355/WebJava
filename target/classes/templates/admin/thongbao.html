@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Hệ Thống Quản Lý - Thông báo chung</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Sidebar Fragment -->
+        <div th:replace="~{fragments/sidebar :: sidebar('thongbao')}"></div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <h2 class="page-title">Thông báo chung toàn công ty</h2>
+
+            <div class="content-card">
+                <h3 style="margin-top: 0; font-size: 16px;">Phát thông báo mới</h3>
+                <form th:action="@{/admin/send-notification}" method="post">
+                    <textarea name="message" class="rounded-textfield" style="height: 100px; padding: 15px; border-radius: 10px; resize: none; margin-bottom: 15px;" placeholder="Nhập thông báo gửi toàn thể nhân viên... (Ví dụ: Thông báo nghỉ lễ, thưởng Tết...)"></textarea>
+                    <div style="text-align: right;">
+                        <button type="submit" class="btn-warning">Gửi thông báo</button>
+                    </div>
+                </form>
+            </div>
+
+        </div>
+    </div>
+</body>
+</html>

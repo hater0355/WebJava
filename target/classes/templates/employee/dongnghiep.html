@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Cổng Nhân Viên - Danh bạ Đồng nghiệp</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <script>
+        var selectedEmpId = null;
+        var selectedName = null;
+        var selectedPos = null;
+        var selectedDob = null;
+        var selectedJoinDate = null;
+        var selectedPhone = null;
+        var selectedFamily = null;
+
+        function selectRow(row, empId, name, pos, dob, joinDate, phone, family) {
+            var rows = document.querySelectorAll('#colleagueTable tbody tr');
+            rows.forEach(r => {
+                r.style.backgroundColor = '';
+                r.classList.remove('selected-row');
+            });
+            row.style.backgroundColor = 'rgba(37, 99, 235, 0.1)';
+            row.classList.add('selected-row');
+            selectedEmpId = empId;
+            selectedName = name;
+            selectedPos = pos;
+            selectedDob = dob;
+            selectedJoinDate = joinDate;
+            selectedPhone = phone;
+            selectedFamily = family;
+        }
+
+        function filterColleagues() {
+            var searchText = document.getElementById("searchInput").value.toLowerCase();
+            var posFilter = document.getElementById("posFilter").value;
+            
+            var rows = document.querySelectorAll('#colleagueTable tbody tr');
+            rows.forEach(r => {
+                var name = r.getAttribute('data-name').toLowerCase();
+                var pos = r.getAttribute('data-pos');
+                
+                var matchName = name.includes(searchText);
+                var matchPos = (posFilter === "Tất cả chức vụ" || pos === posFilter);
+                
+                if (matchName && matchPos) {
+                    r.style.display = "";
+                } else {
+                    r.style.display = "none";
+                }
+            });
+        }
+
+        function viewDetails() {
+            if (!selectedEmpId) {
+                alert("Vui lòng chọn một đồng nghiệp từ bảng để xem chi tiết!");
+                return;
+            }
+            
+            document.getElementById("detailName").innerHTML = selectedName;
+            document.getElementById("detailIdPos").innerHTML = "Mã NV: " + selectedEmpId + " - Chức vụ: " + selectedPos;
+            document.getElementById("detailPhone").innerHTML = selectedPhone || "Chưa cập nhật";
+            document.getElementById("detailDob").innerHTML = selectedDob || "Chưa cập nhật";
+            document.getElementById("detailJoinDate").innerHTML = selectedJoinDate || "Chưa cập nhật";
+            document.getElementById("detailFamily").innerHTML = selectedFamily || "Chưa cập nhật";
+            
+            document.getElementById("detailModal").style.display = "flex";
+        }
+
+        function closeDetailModal() {
+            document.getElementById("detailModal").style.display = "none";
+        }
+        
+        function sendEmail() {
+            alert("Tính năng gửi Email đang được cập nhật!");
+        }
+    </script>
+    <style>
+        .selected-row { border-left: 3px solid var(--color-login); }
+        .modal {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5); justify-content: center; align-items: center; z-index: 1000;
+        }
+        .modal-content {
+            background: var(--bg-card); padding: 25px; border-radius: 8px; width: 450px; max-width: 90%;
+            color: var(--text-primary);
+        }
+        .detail-row {
+            margin-bottom: 12px; font-size: 15px; border-bottom: 1px solid var(--border-color); padding-bottom: 8px;
+        }
+        .detail-label { font-weight: bold; display: inline-block; width: 120px; }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Sidebar -->
+        <div th:replace="~{fragments/employee_sidebar :: sidebar('dongnghiep')}"></div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h2 class="page-title" style="margin: 0;" th:text="'Danh sách Đồng nghiệp - Phòng ' + ${employee.department}"></h2>
+                <button class="btn-primary" style="background-color: #3b82f6;" onclick="viewDetails()">Xem chi tiết</button>
+            </div>
+            
+            <div class="content-card" style="margin-bottom: 20px;">
+                <div style="display: flex; gap: 20px; align-items: center;">
+                    <div style="flex: 1;">
+                        <label style="font-weight: bold; color: var(--text-primary);">Tìm kiếm theo tên:</label><br>
+                        <input type="text" id="searchInput" onkeyup="filterColleagues()" placeholder="Nhập tên đồng nghiệp..." style="width: 100%; padding: 8px; margin-top: 5px; border-radius: 4px; border: 1px solid var(--border-color);">
+                    </div>
+                    <div style="flex: 1;">
+                        <label style="font-weight: bold; color: var(--text-primary);">Lọc chức vụ:</label><br>
+                        <select id="posFilter" onchange="filterColleagues()" style="width: 100%; padding: 8px; margin-top: 5px; border-radius: 4px; border: 1px solid var(--border-color);">
+                            <option value="Tất cả chức vụ">Tất cả chức vụ</option>
+                            <option value="Trưởng phòng">Trưởng phòng</option>
+                            <option value="Phó phòng">Phó phòng</option>
+                            <option value="Nhân viên bậc 3">Nhân viên bậc 3</option>
+                            <option value="Nhân viên bậc 2">Nhân viên bậc 2</option>
+                            <option value="Nhân viên bậc 1">Nhân viên bậc 1</option>
+                            <option value="Thực tập viên">Thực tập viên</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="content-card" style="padding: 0; overflow: hidden;">
+                <table class="custom-table" id="colleagueTable" style="margin: 0;">
+                    <thead style="background-color: var(--bg-main);">
+                        <tr>
+                            <th>Mã NV</th>
+                            <th>Họ Tên</th>
+                            <th>Chức vụ</th>
+                            <th>Tuổi</th>
+                            <th>Thâm niên</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:if="${#lists.isEmpty(colleagues)}">
+                            <td colspan="5" style="text-align: center; color: var(--text-secondary); padding: 20px;">Phòng ban này hiện chưa có đồng nghiệp nào khác.</td>
+                        </tr>
+                        <tr th:each="emp : ${colleagues}" style="cursor: pointer;"
+                            th:data-name="${emp.name}" th:data-pos="${emp.position}"
+                            th:onclick="selectRow(this, [[${emp.id}]], [[${emp.name}]], [[${emp.position}]], [[${emp.ngaySinh != null ? emp.ngaySinh.toString() : ''}]], [[${emp.ngayVaoLam != null ? emp.ngayVaoLam.toString() : ''}]], [[${emp.lienLacKhan}]], [[${emp.giaDinh}]])">
+                            <td th:text="${emp.id}" style="font-weight: bold;"></td>
+                            <td>
+                                <span th:text="${emp.name}"></span>
+                                <span th:if="${emp.ngaySinh != null and emp.ngaySinh.month == T(java.time.LocalDate).now().month and emp.ngaySinh.dayOfMonth == T(java.time.LocalDate).now().dayOfMonth}" style="color: #10B981; font-weight: bold; font-size: 12px; margin-left: 5px;">(Sinh nhật 🎂)</span>
+                            </td>
+                            <td th:text="${emp.position}"></td>
+                            <td th:text="${emp.tuoi > 0 ? emp.tuoi : '?'}"></td>
+                            <td th:text="${emp.thamNien > 0 ? emp.thamNien : '?'}"></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Modal Chi tiết Đồng nghiệp -->
+    <div id="detailModal" class="modal">
+        <div class="modal-content">
+            <h2 id="detailName" style="color: #10B981; margin-top: 0; margin-bottom: 5px;"></h2>
+            <p id="detailIdPos" style="margin-top: 0; margin-bottom: 20px; font-style: italic; color: var(--text-secondary);"></p>
+            
+            <div class="detail-row"><span class="detail-label">SĐT cá nhân:</span> <span id="detailPhone" style="color: #3b82f6; font-weight: bold;"></span></div>
+            <div class="detail-row"><span class="detail-label">Ngày sinh:</span> <span id="detailDob"></span></div>
+            <div class="detail-row"><span class="detail-label">Ngày vào làm:</span> <span id="detailJoinDate"></span></div>
+            <div class="detail-row"><span class="detail-label">Liên hệ gia đình:</span> <span id="detailFamily"></span></div>
+            
+            <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 25px;">
+                <button type="button" class="btn-danger" style="background-color: var(--bg-sidebar); color: var(--text-primary); border: 1px solid var(--border-color);" onclick="closeDetailModal()">Đóng</button>
+                <button type="button" class="btn-success" style="background-color: #3b82f6;" onclick="sendEmail()">Gửi Email</button>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

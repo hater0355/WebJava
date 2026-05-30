@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Hệ Thống Quản Lý Công Ty - Đăng Nhập</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <style>
+        .input-group {
+            position: relative;
+            margin-bottom: 20px;
+        }
+        .options-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            font-size: 12px;
+        }
+        .remember-me {
+            color: var(--text-secondary);
+            cursor: pointer;
+        }
+        .forgot-password {
+            color: var(--color-login);
+            font-style: italic;
+        }
+        .switch-link {
+            display: block;
+            text-align: center;
+            margin-top: 20px;
+            color: var(--color-register);
+        }
+    </style>
+</head>
+<body class="auth-body">
+    <div class="auth-card">
+        <h1 class="auth-title login">ĐĂNG NHẬP</h1>
+        
+        <div th:if="${param.error}" style="color: red; text-align: center; font-size: 13px; margin-bottom: 15px; font-weight: bold;">
+            Sai tài khoản hoặc mật khẩu!
+        </div>
+        <div th:if="${param.logout}" style="color: var(--color-register); text-align: center; font-size: 13px; margin-bottom: 15px; font-weight: bold;">
+            Bạn đã đăng xuất thành công.
+        </div>
+
+        <form th:action="@{/login}" method="post">
+            <div class="input-group">
+                <label class="form-label">Tên tài khoản:</label>
+                <input type="text" name="username" class="rounded-textfield" required>
+            </div>
+            
+            <div class="input-group">
+                <label class="form-label">Mật khẩu:</label>
+                <input type="password" name="password" id="password" class="rounded-textfield" style="padding-right: 50px;" required>
+                <button type="button" class="toggle-password" onclick="togglePass()">Hiện</button>
+            </div>
+
+            <div class="options-row">
+                <label class="remember-me">
+                    <input type="checkbox" name="remember-me"> Nhớ mật khẩu
+                </label>
+                <a href="#" class="link-text forgot-password" onclick="alert('Chức năng Quên mật khẩu đang được cập nhật!')">Quên mật khẩu?</a>
+            </div>
+
+            <button type="submit" class="rounded-button btn-login">Đăng nhập ngay</button>
+        </form>
+
+        <a th:href="@{/register}" class="link-text switch-link">Chưa có tài khoản? Đăng ký tại đây.</a>
+    </div>
+
+    <script>
+        function togglePass() {
+            var passInput = document.getElementById("password");
+            var btn = document.querySelector(".toggle-password");
+            if (passInput.type === "password") {
+                passInput.type = "text";
+                btn.classList.add("active");
+            } else {
+                passInput.type = "password";
+                btn.classList.remove("active");
+            }
+        }
+    </script>
+</body>
+</html>

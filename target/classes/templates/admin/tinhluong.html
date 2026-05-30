@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Hệ Thống Quản Lý - Tính lương</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Sidebar Fragment -->
+        <div th:replace="~{fragments/sidebar :: sidebar('tinhluong')}"></div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <h2 class="page-title">Bảng lương chi tiết</h2>
+
+            <div class="content-card" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <form th:action="@{/admin/tinhluong}" method="get" style="display: flex; gap: 15px; align-items: center;">
+                    <label style="font-weight: bold; color: var(--text-secondary);">Tháng:</label>
+                    <input type="number" name="month" class="rounded-textfield" th:value="${selectedMonth}" min="1" max="12" style="width: 80px;">
+                    <label style="font-weight: bold; color: var(--text-secondary);">Năm:</label>
+                    <input type="number" name="year" class="rounded-textfield" th:value="${selectedYear}" min="2000" max="2100" style="width: 100px;">
+                    <button type="submit" class="btn-primary" style="padding: 8px 25px;">Tính lương</button>
+                </form>
+                
+                <button class="btn-success" onclick="alert('Chức năng Xuất phiếu lương đang được cập nhật!')">Xuất phiếu lương</button>
+            </div>
+
+            <div class="content-card" style="padding: 0; overflow-x: auto;">
+                <table class="custom-table" style="margin: 0; min-width: 1000px;">
+                    <thead style="background-color: var(--bg-main);">
+                        <tr>
+                            <th>Mã NV</th>
+                            <th>Họ tên</th>
+                            <th>Kỳ lương</th>
+                            <th>Ngày công</th>
+                            <th>Ngày OT</th>
+                            <th>Lương cơ bản</th>
+                            <th>Phạt/Trừ</th>
+                            <th>BHXH (10.5%)</th>
+                            <th>Thuế TNCN</th>
+                            <th>Thực nhận</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:if="${#lists.isEmpty(salaryRecords)}">
+                            <td colspan="10" style="text-align: center; color: var(--text-secondary); padding: 20px;">Chưa có dữ liệu.</td>
+                        </tr>
+                        <tr th:each="record, stat : ${salaryRecords}">
+                            <td th:text="${employees[stat.index].id}" style="font-weight: bold;"></td>
+                            <td th:text="${record.employeeName}"></td>
+                            <td th:text="${record.monthYear}"></td>
+                            <td th:text="${record.regularDays}"></td>
+                            <td th:text="${record.overtimeDays}"></td>
+                            <td th:text="${#numbers.formatDecimal(employees[stat.index].baseSalary, 0, 'COMMA', 0, 'POINT')}"></td>
+                            <td th:text="${#numbers.formatDecimal(record.penalty, 0, 'COMMA', 0, 'POINT')}" style="color: var(--color-danger);"></td>
+                            <td th:text="${#numbers.formatDecimal(record.insurance, 0, 'COMMA', 0, 'POINT')}"></td>
+                            <td th:text="${#numbers.formatDecimal(record.tax, 0, 'COMMA', 0, 'POINT')}"></td>
+                            <td th:text="${#numbers.formatDecimal(record.finalSalary, 0, 'COMMA', 0, 'POINT')}" style="font-weight: bold; color: var(--color-register);"></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+        </div>
+    </div>
+</body>
+</html>

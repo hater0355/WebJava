@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:fragment="sidebar(activeTab)">
+<head>
+</head>
+<body>
+    <div class="sidebar">
+        <div class="sidebar-logo">
+            <span style="font-size: 20px;">👤</span> CỔNG NHÂN VIÊN
+        </div>
+        
+        <ul class="sidebar-menu">
+            <li><a th:href="@{/employee/dashboard}" th:classappend="${activeTab == 'dashboard'} ? 'active' : ''">🏠 Trang chủ làm việc</a></li>
+            <li><a th:href="@{/employee/lich}" th:classappend="${activeTab == 'lich'} ? 'active' : ''">📅 Lịch cá nhân</a></li>
+            <li><a th:href="@{/employee/nhiemvu}" th:classappend="${activeTab == 'nhiemvu'} ? 'active' : ''">📋 Nhiệm vụ được giao</a></li>
+            <li><a th:href="@{/employee/salary}" th:classappend="${activeTab == 'salary'} ? 'active' : ''">💰 Tra cứu phiếu lương</a></li>
+            <li><a th:href="@{/employee/dongnghiep}" th:classappend="${activeTab == 'dongnghiep'} ? 'active' : ''">👥 Danh bạ đồng nghiệp</a></li>
+            <li th:if="${employee != null and employee.position == 'Trưởng phòng'}"><a th:href="@{/employee/thuongphat}" th:classappend="${activeTab == 'thuongphat'} ? 'active' : ''">⚖️ Quản lý Thưởng/Phạt</a></li>
+        </ul>
+
+        <div class="sidebar-profile" onclick="toggleProfileMenu()">
+            <div style="font-size: 24px; color: var(--text-secondary);">👤</div>
+            <div class="profile-info">
+                <p class="profile-name">NV: <span th:text="${employee != null ? employee.loginUsername : ''}"></span></p>
+                <p class="profile-code">Mã NV: <span th:text="${employee != null ? employee.id : ''}"></span></p>
+            </div>
+            <div style="color: var(--text-secondary);">⋮</div>
+        </div>
+        
+        <!-- Profile Popup -->
+        <div id="profileMenu" style="display: none; position: absolute; bottom: 80px; left: 20px; width: 240px; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); padding: 10px; z-index: 1000;">
+            <div style="padding: 10px; border-bottom: 1px solid var(--border-color);">
+                <strong>Nhân Viên</strong>
+            </div>
+            <div style="padding: 10px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;">
+                <span>Chế độ Tối</span>
+                <input type="checkbox" id="themeToggle" onchange="switchTheme(this)">
+            </div>
+            <div style="padding: 10px; border-bottom: 1px solid var(--border-color);">
+                <a th:href="@{/employee/profile}" style="color: var(--text-primary); text-decoration: none;">Hồ sơ & Đổi mật khẩu</a>
+            </div>
+            <a th:href="@{/logout}" style="display: block; padding: 10px; color: var(--color-danger); text-decoration: none; font-weight: bold;">
+                Đăng xuất
+            </a>
+        </div>
+    </div>
+
+    <script>
+        function toggleProfileMenu() {
+            var menu = document.getElementById('profileMenu');
+            menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+        }
+
+        // Theme switching logic
+        function switchTheme(checkbox) {
+            if(checkbox.checked) {
+                document.documentElement.setAttribute('data-theme', 'dark');
+                localStorage.setItem('theme', 'dark');
+            } else {
+                document.documentElement.setAttribute('data-theme', 'light');
+                localStorage.setItem('theme', 'light');
+            }
+        }
+
+        // Apply saved theme on load
+        document.addEventListener('DOMContentLoaded', (event) => {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            if(savedTheme === 'dark') {
+                document.documentElement.setAttribute('data-theme', 'dark');
+                document.getElementById('themeToggle').checked = true;
+            }
+        });
+        
+        // Hide menu when clicking outside
+        document.addEventListener('click', function(event) {
+            var profileDiv = document.querySelector('.sidebar-profile');
+            var menuDiv = document.getElementById('profileMenu');
+            if (!profileDiv.contains(event.target) && !menuDiv.contains(event.target)) {
+                menuDiv.style.display = 'none';
+            }
+        });
+    </script>
+</body>
+</html>
